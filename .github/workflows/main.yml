@@ -10,7 +10,7 @@ jobs:
       packages: write
       contents: read
     env:
-      GITHUB_TOKEN : ${{secrets.GITHUB_TOKEN}}
+      GITHUB_TOKEN : ${{secrets.ADMIN_TOKEN}}
     strategy:
       matrix:
         dotnet: [ '3.0', '3.1.x', '5.0.x', '6.x' ]

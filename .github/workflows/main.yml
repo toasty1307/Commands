@@ -22,12 +22,10 @@ jobs:
           source-url: https://nuget.pkg.github.com/ToastyMarshmallow/index.json
         env:
           NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Install dependencies
+        run: 'cd ./Commands/ && dotnet add package DSharpPlus --version 4.2.0-nightly-00975 && dotnet add package Microsoft.Data.Sqlite --version 6.0.0-preview.7.21378.4'
       - run: dotnet build --configuration Release Commands
       - name: Create the package
         run: dotnet pack --configuration Release Commands
       - name: Publish the package to GPR
         run: dotnet nuget push Commands/bin/Release/*.nupkg
-      - name: Display dotnet version
-        run: dotnet --version
-      - name: Install dependencies
-        run: 'cd ./Commands/ && dotnet add package DSharpPlus --version 4.2.0-nightly-00975 && dotnet add package Microsoft.Data.Sqlite --version 6.0.0-preview.7.21378.4'

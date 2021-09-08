@@ -1,0 +1,39 @@
+name: dotnet package
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    strategy:
+      matrix:
+        dotnet: [ '3.0', '3.1.x', '5.0.x', '6.x' ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup dotnet ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+          source-url: https://nuget.pkg.github.com/<owner>/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - run: dotnet build --configuration Release Commands
+      - name: Create the package
+        run: dotnet pack --configuration Release Commands
+      - name: Publish the package to GPR
+        run: dotnet nuget push Commands/bin/Release/*.nupkg
+      - name: Display dotnet version
+        run: dotnet --version
+        steps:
+          - uses: actions/checkout@v2
+          - name: Setup dotnet
+            uses: actions/setup-dotnet@v1
+            with:
+              dotnet-version: '3.1.x'
+          - name: Install dependencies
+            run: ['cd ./Commands/', 'dotnet add package DSharpPlus --version 4.2.0-nightly-00975', 'dotnet add package Microsoft.Data.Sqlite --version 6.0.0-preview.7.21378.4']

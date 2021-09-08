@@ -13,7 +13,7 @@ jobs:
       GITHUB_TOKEN : ${{secrets.ADMIN_TOKEN}}
     strategy:
       matrix:
-        dotnet: [ '3.0', '3.1.x', '5.0.x', '6.x' ]
+        dotnet: [ '6.x' ]
 
     steps:
       - uses: actions/checkout@v2

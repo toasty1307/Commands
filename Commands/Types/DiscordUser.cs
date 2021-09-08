@@ -25,7 +25,7 @@ namespace Commands.Types
                     return false;
                 }
             }
-            catch (Exception e)
+            catch 
             {
                 return false;
             }

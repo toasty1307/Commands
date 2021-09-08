@@ -5,7 +5,6 @@ using Commands.CommandsStuff;
 using Commands.Types;
 using Commands.Utils;
 using DSharpPlus.Entities;
-using Commands.Utils;
 using DSharpPlus.EventArgs;
 
 namespace Commands.Commands.Utils

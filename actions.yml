@@ -1,2 +1,0 @@
-- name: CommandsThingyForD#+
-  uses: actions/setup-dotnet@v1.8.1

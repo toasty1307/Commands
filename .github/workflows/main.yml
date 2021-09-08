@@ -9,6 +9,8 @@ jobs:
     permissions:
       packages: write
       contents: read
+    env:
+      GITHUB_TOKEN : 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
     strategy:
       matrix:
         dotnet: [ '3.0', '3.1.x', '5.0.x', '6.x' ]

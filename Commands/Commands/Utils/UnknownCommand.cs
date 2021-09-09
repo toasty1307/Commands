@@ -12,18 +12,17 @@ namespace Commands.Commands.Utils
         public override bool Unknown => true;
         public override bool Hidden => true;
         public override string Description => "Command for unknown idk";
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             var privateChannel = message.Channel.Guild is null;
             var extension = Extension;
             var prefix = (await extension.Provider.Get(message.Channel.Guild)).Prefix;
             var command = privateChannel ? "`help`" : $"`{prefix}help` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator} help`";
             var replyString = $"Unknown Command. Use {command} to get the command list";
-            var replyMessage = await message.ReplyAsync(replyString);
-            return new[] { replyMessage };
+            await message.ReplyAsync(replyString);
         }
 
-        public override Task<DiscordMessage[]> Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)
+        public override Task Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)
         {
             throw new Exception("how");
         }

@@ -1,5 +1,5 @@
-﻿using System;
-using System.Threading.Channels;
+﻿#if DEBUG
+using System;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Types;
@@ -21,14 +21,15 @@ namespace Commands.Commands.DebugCommands
             }
         };
 
-        public override Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             throw new NotImplementedException("no");
         }
 
         public override Task Run(DiscordInteraction interaction, ArgumentCollector collector)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }
+#endif

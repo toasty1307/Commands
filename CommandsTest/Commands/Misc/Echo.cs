@@ -1,8 +1,6 @@
-﻿using System.Runtime.InteropServices.ComTypes;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Types;
-using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
@@ -21,25 +19,22 @@ namespace CommandsTest.Commands.Misc
             new Argument<DiscordTextChannelArgumentType>()
             {
                 Key = "Channel",
-                Prompt = "Where",
                 Optional = true
             },
             new Argument<StringArgumentType>()
             {
                 Key = "Text",
-                Prompt = "Text to say",
                 Infinite = true
             }
         };
 
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             var channel = collector.Get<DiscordChannel>("Channel") ?? message.Channel;
             await message.DeleteAsync();
             var text = collector.Get<string>("Text");
             var builder = new DiscordMessageBuilder().WithContent(text).WithAllowedMention(new UserMention());
-            var echoMessage = await channel.SendMessageAsync(builder);
-            return new[] {echoMessage};
+            await channel.SendMessageAsync(builder);
         }
 
         public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Utils;
-using DSharpPlus;
 using DSharpPlus.Entities;
 
 namespace Commands.Commands.Utils
@@ -19,10 +17,9 @@ namespace Commands.Commands.Utils
         };
         public override string Description => "Ping, thats about it, yeah";
 
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
-            var pingMessage = await message.ReplyAsync($"The bot's ping is {Client.Ping}ms");
-            return new[] {pingMessage};
+            await message.ReplyAsync($"The bot's ping is {Client.Ping}ms");
         }
 
         public override async Task Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)

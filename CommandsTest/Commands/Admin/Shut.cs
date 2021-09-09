@@ -13,11 +13,10 @@ namespace CommandsTest.Commands.Admin
         public override bool OwnerOnly => true;
         public override bool Hidden => true;
 
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             await message.ReplyAsync("cya");
             Environment.Exit(0);
-            return null;
         }
 
         public override async Task Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)

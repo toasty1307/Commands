@@ -25,7 +25,6 @@ namespace Commands
         public List<Inhibitor<DiscordMessage>> MessageInhibitors { get; set; } = new();
         public List<Inhibitor<DiscordInteraction>> InteractionInhibitors { get; set; } = new();
         public Dictionary<string, Action<ComponentInteractionCreateEventArgs>> ComponentActions { get; set; } = new();
-        public Dictionary<ulong, DiscordMessage[]> MessagesAndResponses { get; set; } = new();
 
         public void AddInhibitor(Inhibitor<DiscordMessage> inhibitor) => MessageInhibitors.Add(inhibitor);
         public void AddInhibitor(Inhibitor<DiscordInteraction> inhibitor) => InteractionInhibitors.Add(inhibitor);
@@ -75,29 +74,19 @@ namespace Commands
             
             try
             {
-                DiscordMessage[] responses = null;
-                // TODO CacheCommandMessages
                 switch (commands.Length)
                 {
                     case 1:
-                        responses = await RunCommand(commands[0], message, words);
-                        MessagesAndResponses.Add(message.Id, responses);
+                        await RunCommand(commands[0], message, words);
                         break;
                     case > 1:   
-                        responses = new []{await message.ReplyAsync("Multiple Commands Found, please be More Specific")};
-                        MessagesAndResponses.Add(message.Id, responses);
+                        await message.ReplyAsync("Multiple Commands Found, please be More Specific");
                         break;
                     case 0 when Registry.UnknownCommand is not null:
                         Extension.UnknownCommandRun(message);
-                        responses = await Registry.UnknownCommand.Run(message, null);
-                        MessagesAndResponses.Add(message.Id, responses);
+                        await Registry.UnknownCommand.Run(message, null);
                         break;
                 }
-
-                Task.Delay(Extension.Options.CommandEditableDuration * 1000).ContinueWith(_ =>
-                {
-                    if (MessagesAndResponses.ContainsKey(message.Id)) MessagesAndResponses.Remove(message.Id);
-                });
             }
             catch (Exception e)
             {
@@ -128,12 +117,9 @@ namespace Commands
                         Client.Logger.Error(e);
                     }
                 }
-
-                if (!await ShouldHandle(interaction)) return;
-
+                
                 var args = interaction.Data.Options?.Select(x => x.Value?.ToString()).ToList() ?? new List<string>();
-            
-            
+
                 var commands = Registry.FindCommands(command.ToLower());
             
                 try
@@ -163,20 +149,11 @@ namespace Commands
                 throw;
             }
         }
-
-        private async Task<bool> ShouldHandle(DiscordInteraction interaction)
+        
+        private async Task RunCommand(Command command, DiscordMessage message, string[] strings)
         {
-            if (interaction.User.IsBot) return false;
-            
-            // TODO
-            
-            return true;
-        }
-
-        private async Task<DiscordMessage[]> RunCommand(Command command, DiscordMessage message, string[] strings)
-        {
-            foreach (var result in MessageInhibitors.Select(inhibitor => inhibitor(message)).Where(result => result != null))
-                return new[] {result.Response};
+            if (MessageInhibitors.Select(inhibitor => inhibitor(message)).Any(result => result != null))
+                return;
 
             try
             {
@@ -197,19 +174,20 @@ namespace Commands
                                           throttle.Start.ConvertToUnixTimestamp()));
                     }
                     Extension.CommandBlocked(command, message, reason, missingUserPerms, missingClientPerms, seconds);
-                    return await command.OnBlock(message, reason, missingUserPerms, missingClientPerms, seconds);
+                    await command.OnBlock(message, reason, missingUserPerms, missingClientPerms, seconds);
+                    return;
                 }
                 var argumentCollector = FigureOutCommandArgsIdk(string.Join(" ", strings), command, message);
                 command.Collector = argumentCollector;
                 command.Throttle(message.Author);
-                return await command.Run(message, argumentCollector);
+                await command.Run(message, argumentCollector);
             }
             catch (Exception e)
             {
                 if (e is FriendlyException)
                 {
-                    var replyMessage = await message.ReplyAsync(e.Message);
-                    return new []{replyMessage};
+                    await message.ReplyAsync(e.Message);
+                    return;
                 }
                 Client.Logger.Error(e);       
                 var embed = new DiscordEmbedBuilder
@@ -220,7 +198,7 @@ namespace Commands
                     Timestamp = DateTimeOffset.Now,
                     Footer = new DiscordEmbedBuilder.EmbedFooter{IconUrl = message.Author.AvatarUrl, Text = $"Command ran by {message.Author.Username}#{message.Author.Discriminator}"}
                 }.AddField("Error Message", $"`{e.Message}`").AddField("Stack Trace", $"```\n{e.StackTrace![..Math.Min(e.StackTrace.Length - 1, 1000)]}\n```");
-                return new []{ await message.ReplyAsync(embed) };
+                await message.ReplyAsync(embed);
             }
         }
         
@@ -362,7 +340,7 @@ namespace Commands
                 try { argString = commandArg.Infinite ? string.Join(" ", inputArgs[commandArgs.ToList().IndexOf(commandArg)..]) : inputArgs[commandArgs.ToList().IndexOf(commandArg)]; }
                 catch { if (commandArg.Optional) break; }
                 if (string.IsNullOrEmpty(argString)) continue;
-                if (commandArg.OneOf is not null && !commandArg.OneOf.Select(x => x.ToLower()).Contains(argString))
+                if (commandArg.OneOf is not null && !commandArg.OneOf.Select(x => x.ToLower()).Contains(argString.ToLower()))
                     throw new FriendlyException($"Argument {commandArg.Key} should be one of `{string.Join(", ", commandArg.OneOf)}`");
                 var genericType = commandArg.GetType().GetGenericArguments().First();
                 var argumentTypeObject = Registry.GetArgumentType(genericType);
@@ -400,7 +378,7 @@ namespace Commands
             return collector;
         }
 
-        private readonly Regex _splitWordsRegex = new("(?<=\")[^\"]*(?=\")|[^\" ]+");
+        private readonly Regex _splitWordsRegex = new("(?<=\')[^\']*(?=\')|[^\' ]+");
         public string[] SplitWords(string str)
         {
             var matches = _splitWordsRegex.Matches(str);
@@ -469,7 +447,7 @@ namespace Commands
                 ComponentActions[interaction.Id].Invoke(interaction);
         }
 
-        public async Task Handle(DiscordMessage message, DiscordMessage oldMessage)
+        public async Task Handle(DiscordMessage message, DiscordMessage _)
         {
             var providerIsNull = Extension.Provider is null;
             if (!providerIsNull)
@@ -491,10 +469,8 @@ namespace Commands
             
             var words = await GetCommandString(message);
             var commands = Registry.FindCommands(words[0].ToLower());
-            
             try
             {
-                // TODO CacheCommandMessages
                 switch (commands.Length)
                 {
                     case 1:

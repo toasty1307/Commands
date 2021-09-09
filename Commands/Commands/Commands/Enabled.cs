@@ -26,29 +26,26 @@ namespace Commands.Commands.Commands
             }
         };
 
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             var command = collector.Get<Command>("Command");
             var enable = collector.Get<bool?>("Enable");
             var provider = Extension.Provider;
-            DiscordMessage replyMessage;
             if (provider is null)
-                replyMessage = await message.ReplyAsync("No Provider is registered!");
+                await message.ReplyAsync("No Provider is registered!");
             else
             {
                 var enabled = (await provider.Get(message.Channel.Guild)).CommandStatuses[command];
                 if (enable is null)
-                    replyMessage = await message.ReplyAsync($"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {message.Channel.Guild.Name}");
+                    await message.ReplyAsync($"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {message.Channel.Guild.Name}");
                 else if (!command.Guarded)
                 {
                     Extension.CommandStatusChanged(message.Channel.Guild, command, (bool) enable);
-                    replyMessage = await message.ReplyAsync($"Command {command.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
+                    await message.ReplyAsync($"Command {command.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
                 }
                 else
-                    replyMessage = await message.ReplyAsync($"Command {command.Name} is guarded :|");
+                    await message.ReplyAsync($"Command {command.Name} is guarded :|");
             }
-
-            return new[] {replyMessage};
         }
 
         public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)

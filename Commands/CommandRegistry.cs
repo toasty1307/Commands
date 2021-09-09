@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Commands.Commands.Utils;
 using Commands.CommandsStuff;
@@ -80,7 +79,7 @@ namespace Commands
 
         public async Task RegisterSlashCommands(Command[] commands, DiscordGuild guild)
         {
-            foreach (var command in commands.Where(x => !x.Hidden))
+            foreach (var command in commands.Where(x => !x.Hidden && x.RegisterSlashCommand))
             {
                 var slashCommandArguments = new List<DiscordApplicationCommandOption>();
                 if (command.Arguments is not null)
@@ -97,7 +96,7 @@ namespace Commands
                             foreach (var oneOfArg in commandArgument.OneOf)
                             {
                                 oneOf.Add(
-                                    new DiscordApplicationCommandOptionChoice(oneOfArg.ToString()!.ToLower(),
+                                    new DiscordApplicationCommandOptionChoice(oneOfArg!.ToLower(),
                                         oneOfArg));
                             }
                         }

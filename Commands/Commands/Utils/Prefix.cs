@@ -20,12 +20,11 @@ namespace Commands.Commands.Utils
             }
         };
 
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             var prefix = collector.Get<string>("Prefix");
             var shouldSetNewPrefix = !string.IsNullOrWhiteSpace(prefix);
             var provider = Extension.Provider;
-            DiscordMessage replyMessage;
             if (shouldSetNewPrefix)
             {
                 if (provider is not null)
@@ -35,21 +34,19 @@ namespace Commands.Commands.Utils
                         var settings = await provider.Get(message.Channel.Guild);
                         settings.Prefix = prefix;
                         Extension.CommandPrefixChanged(message.Channel.Guild, prefix);
-                        replyMessage = await message.ReplyAsync($"Set the command prefix to {prefix}");
+                        await message.ReplyAsync($"Set the command prefix to {prefix}");
                     }
                     else
-                        replyMessage = await message.ReplyAsync("Cant Set a prefix in DMs!");
+                        await message.ReplyAsync("Cant Set a prefix in DMs!");
                 }
                 else
-                    replyMessage = await message.ReplyAsync("No Settings Provider is registered!");
+                    await message.ReplyAsync("No Settings Provider is registered!");
             }
             else if (provider is not null)
-                replyMessage = await message.ReplyAsync(
+                await message.ReplyAsync(
                     $"The prefix in {(message.Channel.Guild is null ? "DMs" : message.Channel.Guild.Name)} is {(message.Channel.Guild is null ? $"`@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`" : $"`{(await provider.Get(message.Channel.Guild))?.Prefix ?? Extension.CommandPrefix}` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`")}");
             else
-                replyMessage = await message.ReplyAsync($"The prefix in {(message.Channel.Guild is null ? "DMs" : message.Channel.Guild.Name)} is {(message.Channel.Guild is null ? $"`@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`" : $"`{Extension.CommandPrefix}` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`")}");
-
-            return new[] {replyMessage};
+                await message.ReplyAsync($"The prefix in {(message.Channel.Guild is null ? "DMs" : message.Channel.Guild.Name)} is {(message.Channel.Guild is null ? $"`@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`" : $"`{Extension.CommandPrefix}` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`")}");
         }
 
         public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)

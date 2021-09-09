@@ -12,12 +12,11 @@ namespace CommandsTest.Commands.Misc
         public override string Description => "setup stuff idk";
         public override bool GuildOnly => true;
 
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             var msg = await message.ReplyAsync("i'll try");
             await Extension.Registry.RegisterSlashCommands(Extension.Registry.Commands.ToArray(), message.Channel.Guild);
-            msg = await msg.ModifyAsync("done ig");
-            return new[] {msg};
+            await msg.ModifyAsync("done ig");
         }
 
         public override Task Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)

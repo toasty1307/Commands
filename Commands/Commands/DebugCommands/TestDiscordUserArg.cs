@@ -1,11 +1,9 @@
 ﻿#if DEBUG
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Types;
 using Commands.Utils;
 using DSharpPlus.Entities;
-using Microsoft.Extensions.Logging;
 
 namespace Commands.Commands.DebugCommands
 {
@@ -23,11 +21,10 @@ namespace Commands.Commands.DebugCommands
             }
         };
 
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             var user = collector.Get<DiscordUser>("User");
-            var msg = await message.ReplyAsync(user?.Id.ToString() ?? "null");
-            return new[] {msg};
+            await message.ReplyAsync(user?.Id.ToString() ?? "null");
         }
 
         public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
-using Microsoft.Extensions.Logging;
 
 namespace Commands.CommandsStuff
 {
@@ -16,56 +14,49 @@ namespace Commands.CommandsStuff
         public ArgumentCollector Collector { get; set; }
 
         public virtual string Name => GetType().Name;
-        public virtual string[] Aliases { get; }
-        public virtual bool AutoAliases { get; } = true;
+        public virtual bool RegisterSlashCommand => true;
+        public virtual string[] Aliases => null;
         public abstract string GroupName { get; }
         public virtual string MemberName => GetType().Name;
         public abstract string Description { get; }
-        public virtual string Format { get; }
-        public virtual string DetailedDescription { get; }
-        public virtual string[] Examples { get; }
-        public virtual bool GuildOnly { get; }
-        public virtual bool OwnerOnly { get; }
-        public virtual Permissions ClientPermissions { get; } = Permissions.None;
-        public virtual Permissions UserPermissions { get; } = Permissions.None;
-        public virtual bool Nsfw { get; }
-        public virtual ThrottlingOptions ThrottlingOptions { get; }
-        public virtual bool DefaultHandling { get; }
-        public virtual Argument[] Arguments { get; }
-        public virtual int ArgumentPromptLimit { get; } = int.MaxValue;
-        public virtual ArgsType ArgsType { get; } = ArgsType.Single;
-        public virtual int ArgsCount { get; } = 0;
-        public virtual bool ArgsSingleQuotes { get; } = true;
-        public virtual Regex[] Patterns { get; }
-        public virtual bool Guarded { get; } = false;
-        public virtual bool Hidden { get; } = false;
-        public virtual bool Unknown { get; } = false;
+        public virtual string Format => null;
+        public virtual string DetailedDescription => null;
+        public virtual string[] Examples => null;
+        public virtual bool GuildOnly => false;
+        public virtual bool OwnerOnly => false;
+        public virtual Permissions ClientPermissions => Permissions.None;
+        public virtual Permissions UserPermissions => Permissions.None;
+        public virtual bool Nsfw => false;
+        public virtual ThrottlingOptions ThrottlingOptions => null;
+        public virtual Argument[] Arguments => null;
+        public virtual bool Guarded => false;
+        public virtual bool Hidden => false;
+        public virtual bool Unknown => false;
 
 
-        public abstract Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector);
+        public abstract Task Run(DiscordMessage message, ArgumentCollector collector);
 
         public override string ToString() => $"{Group.Id}:{Name}";
         public static implicit operator Command(string s) => Extension.Registry.Commands.First(x => $"{x.Group.Id}:{x.Name}" == s);
 
-        public virtual async Task<DiscordMessage[]> OnBlock(DiscordMessage message, string reason,
+        public virtual async Task OnBlock(DiscordMessage message, string reason,
             Permissions missingUserPermissions = Permissions.None,
             Permissions missingClientPermissions = Permissions.None, uint seconds = 0)
         {
-            var messages = new List<DiscordMessage>();
             switch (reason)
             {
                 case "GUILD_ONLY":
-                    messages.Add(await message.ReplyAsync($"The `{Name}` Command can only be used in a guild"));
+                    await message.ReplyAsync($"The `{Name}` Command can only be used in a guild");
                     break;
                 case "NSFW":
-                    messages.Add(await message.ReplyAsync($"The `{Name}` Command can only be used in Nsfw channels"));
+                    await message.ReplyAsync($"The `{Name}` Command can only be used in Nsfw channels");
                     break;
                 case "USER_PERMISSIONS":
-                    messages.Add(await message.ReplyAsync(
-                        $"You are missing the following permissions for the `{Name}` Command to work:\n`{string.Join(", ", missingUserPermissions)}`"));
+                    await message.ReplyAsync(
+                        $"You are missing the following permissions for the `{Name}` Command to work:\n`{string.Join(", ", missingUserPermissions)}`");
                     break;
                 case "CLIENT_PERMISSIONS":
-                    messages.Add(await message.ReplyAsync($"I need the following permissions to run the `{Name}` Command:\n`{string.Join(", ", missingClientPermissions)}`"));
+                    await message.ReplyAsync($"I need the following permissions to run the `{Name}` Command:\n`{string.Join(", ", missingClientPermissions)}`");
                     break;
                 case "THROTTLING":
                     var minutes = seconds / 60;
@@ -92,20 +83,18 @@ namespace Commands.CommandsStuff
                     };
                     stuff = stuff.Where(x => !string.IsNullOrEmpty(x)).ToList();
                     var finalString = string.Join(", ", stuff);
-                    messages.Add(await message.ReplyAsync($"You may not use the `{Name}` command for another {finalString}"));
+                    await message.ReplyAsync($"You may not use the `{Name}` command for another {finalString}");
                     break;
                 case "DISABLED":
-                    messages.Add(await message.ReplyAsync($"The `{Name}` Command is Disabled!"));
+                    await message.ReplyAsync($"The `{Name}` Command is Disabled!");
                     break;
             }
-            return messages.ToArray();
         }
         
         public virtual async Task OnBlock(DiscordInteraction interaction, string reason,
             Permissions missingUserPermissions = Permissions.None,
             Permissions missingClientPermissions = Permissions.None, uint seconds = 0)
         {
-            var messages = new List<DiscordMessage>();
             switch (reason)
             {
                 case "GUILD_ONLY":
@@ -154,7 +143,9 @@ namespace Commands.CommandsStuff
             }
         }
 
+#pragma warning disable 1998
         public virtual async Task<(bool, string)> HasPermission(DiscordMessage message, bool ownerOverride = false)
+#pragma warning restore 1998
         {
             if (!OwnerOnly && UserPermissions is Permissions.None && ClientPermissions is Permissions.None) return (true, null);
             if (ownerOverride && Extension.Owners.Contains(message.Author)) return (true, null);
@@ -234,7 +225,9 @@ namespace Commands.CommandsStuff
             return (true, null);
         }
 
+#pragma warning disable 1998
         public virtual async Task<(bool, string)> HasPermission(DiscordInteraction interaction, bool ownerOverride = true)
+#pragma warning restore 1998
         {
             if (!OwnerOnly && UserPermissions is Permissions.None && ClientPermissions is Permissions.None) return (true, null);
             if (ownerOverride && Extension.Owners.Contains(interaction.User)) return (true, null);
@@ -251,7 +244,7 @@ namespace Commands.CommandsStuff
         }
     }
 
-    public partial class Throttle
+    public class Throttle
     {
         public DateTime Start { get; set; }
         public int Usages { get; set; }

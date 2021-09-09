@@ -7,6 +7,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-00975" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.0.0-3.final" />
         <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.0-preview.7.21378.4" />
     </ItemGroup>
 </Project>

@@ -31,12 +31,12 @@ namespace Commands.Commands.Utils
             }
         };
 
-        public override async Task<DiscordMessage[]> Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
         {
             var command = collector.Get<Command>("Command");
             var showAll = command is null;
-            if (showAll) return await ProcessAllCommands(message);
-            return await ProcessCommand(message, command);
+            if (showAll) await ProcessAllCommands(message);
+            else await ProcessCommand(message, command);
         }
 
         public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)
@@ -47,7 +47,7 @@ namespace Commands.Commands.Utils
             else await ProcessCommand(interaction, command);
         }
 
-        private async Task<DiscordMessage[]> ProcessCommand(DiscordMessage message, Command command)
+        private async Task ProcessCommand(DiscordMessage message, Command command)
         {
             try
             {
@@ -79,7 +79,7 @@ namespace Commands.Commands.Utils
                     Title = "Help Menu",
                     Timestamp = DateTimeOffset.Now,
                     Description = $"Command **{command.Name}**: {command.Description}\n\n" +
-                                  $"**Format**: {format}\n" +
+                                  $"**Format**: {command.Format ?? format}\n" +
                                   $"{(command.Aliases is not null ? $"**Aliases**: {string.Join(", ", command.Aliases)}\n" : "")}" +
                                   $"**Group**: {command.Group.Name}(`{command.Group.Id}:{command.MemberName}`)\n" +
                                   $"{(command.DetailedDescription is not null ? $"**Details**: {command.DetailedDescription}\n" : "")}" +
@@ -87,8 +87,7 @@ namespace Commands.Commands.Utils
                     Color = new Optional<DiscordColor>(new DiscordColor("2F3136"))
                 };
             
-                var helpMessage = await message.ReplyAsync(embed);
-                return new[] {helpMessage};
+                await message.ReplyAsync(embed);
             }
             catch (Exception e)
             {
@@ -128,7 +127,7 @@ namespace Commands.Commands.Utils
                     Title = "Help Menu",
                     Timestamp = DateTimeOffset.Now,
                     Description = $"Command **{command.Name}**: {command.Description}\n\n" +
-                                  $"**Format**: {format}\n" +
+                                  $"**Format**: {command.Format ?? format}\n" +
                                   $"{(command.Aliases is not null ? $"**Aliases**: {string.Join(", ", command.Aliases)}\n" : "")}" +
                                   $"**Group**: {command.Group.Name}(`{command.Group.Id}:{command.MemberName}`)\n" +
                                   $"{(command.DetailedDescription is not null ? $"**Details**: {command.DetailedDescription}\n" : "")}" +
@@ -180,7 +179,7 @@ namespace Commands.Commands.Utils
             component.AddListener(SendGroupEmbed);
             await interaction.FollowUpAsync(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(component));
         }
-        private async Task<DiscordMessage[]> ProcessAllCommands(DiscordMessage message)
+        private async Task ProcessAllCommands(DiscordMessage message)
         {
             var groups = Extension.Registry.Groups;
             var currentUser = Client.CurrentUser;
@@ -216,11 +215,10 @@ namespace Commands.Commands.Utils
             var component = new DiscordSelectComponent("helpCommandSelect", "Group",
                 groups.Select(x => new DiscordSelectComponentOption(x.Name, x.Name)));
             component.AddListener(SendGroupEmbed);
-            var helpMessage = await message.ReplyAsync(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(component));
-            return new[] {helpMessage};
+            await message.ReplyAsync(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(component));
         }
 
-        public async void SendGroupEmbed(ComponentInteractionCreateEventArgs args)
+        private async void SendGroupEmbed(ComponentInteractionCreateEventArgs args)
         {
             var group = Extension.Registry.Groups.First(x =>
                 string.Equals(x.Name, args.Values[0], StringComparison.CurrentCultureIgnoreCase));

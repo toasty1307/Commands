@@ -132,7 +132,9 @@ namespace Commands
                 var argsList = interaction.Data.Options?.Select(x => x.Value?.ToString()).ToList() ?? new List<string>();
 
                 var commands = Registry.FindCommands(command.ToLower());
-            
+
+                if (commands.Length == 0) Extension.UnknownCommandRun(interaction);
+                
                 try
                 {
                     await RunCommand(commands[0], interaction, argsList.ToArray());

@@ -220,7 +220,7 @@ namespace Commands
         public void RegisterDefaults()
         {
             RegisterArgumentTypes(GetType().Assembly);
-            RegisterGroups(new []{ new Group{Name = "Utils", Description = "Util Commands"}, new Group{Name = "Commands", Description = "drink milk for strong bones"} });
+            RegisterGroups(new []{ new Group{Name = "Utils", Description = "Util Commands"}, new Group{Name = "Commands", Guarded = true, Description = "drink milk for strong bones"} });
 #if DEBUG
             RegisterGroup(new Group{Name = "Debug", Description = "debug stuff"});   
 #endif

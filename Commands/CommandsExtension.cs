@@ -21,9 +21,12 @@ namespace Commands
         public SettingProvider Provider { get; private set; }
 
         public event AsyncEventHandler<DiscordMessage> UnknownCommand; 
+        public event AsyncEventHandler<DiscordInteraction> UnknownCommandInteration; 
         public event AsyncEventHandler<SettingProvider> ProviderReady;
         public event AsyncEventHandler<Command, DiscordMessage, string, Permissions, Permissions, uint> CommandBlock;
+        public event AsyncEventHandler<Command, DiscordInteraction, string, Permissions, Permissions, uint> CommandBlockInteration;
         public event AsyncEventHandler<Command, string, DiscordMessage> CommandCancel;
+        public event AsyncEventHandler<Command, string, DiscordInteraction> CommandCancelInteration;
         public event AsyncEventHandler<Group> GroupRegister;
         public event AsyncEventHandler<Command> CommandRegister;
         public event AsyncEventHandler<DiscordGuild, string> CommandPrefixChange;
@@ -109,23 +112,23 @@ namespace Commands
         {
             GroupRegister.SafeInvoke(group);
         }
-        // TODO
         public void GroupStatusChanged(DiscordGuild guild, Group @group, bool enabled)
         {
             GroupStatusChange.SafeInvoke(guild, group, enabled);
         }
         public void CommandCanceled(Command command, string invalidArgs, DiscordInteraction interaction)
         {
-            throw new System.NotImplementedException();
+            CommandCancelInteration.SafeInvoke(command, invalidArgs, interaction);
         }
 
         public void CommandBlocked(Command command, DiscordInteraction interaction, string reason, Permissions missingUserPermissions, Permissions missingClientPermissions, uint seconds)
         {
-            throw new System.NotImplementedException();
+            CommandBlockInteration.SafeInvoke(command, interaction, reason, missingUserPermissions,
+                missingClientPermissions, seconds);
         }
         public void UnknownCommandRun(DiscordInteraction interaction)
         {
-            throw new System.NotImplementedException();
+            UnknownCommandInteration.SafeInvoke(interaction);
         }
     }
 }

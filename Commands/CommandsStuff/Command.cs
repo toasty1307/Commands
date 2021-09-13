@@ -88,6 +88,9 @@ namespace Commands.CommandsStuff
                 case "DISABLED":
                     await message.ReplyAsync($"The `{Name}` Command is Disabled!");
                     break;
+                case "GROUP_DISABLED":
+                    await message.ReplyAsync($"The `{Group.Name}` Group is Disabled!");
+                    break;
             }
         }
         
@@ -138,6 +141,9 @@ namespace Commands.CommandsStuff
                 case "DISABLED":
                     await interaction.FollowUpAsync($"The `{Name}` Command is Disabled!");
                     break;
+                case "GROUP_DISABLED":
+                    await interaction.FollowUpAsync($"The `{Group.Name}` Group is Disabled!");
+                    break;
             }
         }
 
@@ -170,6 +176,7 @@ namespace Commands.CommandsStuff
             try
             {
                 if (!(await Extension.Provider.Get(message.Channel.Guild)).CommandStatuses[this]) return (false, "DISABLED");
+                if (!(await Extension.Provider.Get(message.Channel.Guild)).GroupStatuses[Group]) return (false, "GROUP_DISABLED");
             }
             catch (Exception e)
             {
@@ -210,6 +217,7 @@ namespace Commands.CommandsStuff
             try
             {
                 if (!(await Extension.Provider.Get(interaction.Channel.Guild)).CommandStatuses[this]) return (false, "DISABLED");
+                if (!(await Extension.Provider.Get(interaction.Channel.Guild)).GroupStatuses[Group]) return (false, "GROUP_DISABLED");
             }
             catch (Exception e)
             {

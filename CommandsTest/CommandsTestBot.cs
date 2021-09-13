@@ -63,6 +63,7 @@ namespace CommandsTest
             Client.UseLavalink();
             
             
+            /*
             var config2 = GetConfig("Config.json");
             var discordConfiguration2 = new DiscordConfiguration
             {
@@ -103,6 +104,7 @@ namespace CommandsTest
             Client2.GuildMemberAdded += CheckForBadNick;
             Client2.GuildMemberUpdated += CheckForBadNick;
             Client2.UseLavalink();
+        */
         }
 
         private async Task CheckForBadNick(DiscordClient client, GuildMemberUpdateEventArgs args)
@@ -137,7 +139,9 @@ namespace CommandsTest
         public async Task Run()
         {
             await Client.ConnectAsync(new DiscordActivity{ActivityType = ActivityType.Playing, Name = "Milk"}, UserStatus.Idle, DateTimeOffset.Now);
+            /*
             await Client2.ConnectAsync(new DiscordActivity{ActivityType = ActivityType.Playing, Name = "Milk"}, UserStatus.Idle, DateTimeOffset.Now);
+        */
         }
 
         public Config GetConfig(string fileName)

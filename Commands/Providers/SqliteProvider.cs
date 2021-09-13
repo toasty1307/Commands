@@ -17,14 +17,9 @@ namespace Commands.Providers
         public SqliteConnection Connection { get; set; }
         public Dictionary<ulong, GuildSettingHelper> SettingsMap { get; set; } = new();
 
-        public SqliteProvider(string sqlConnectionString)
+        public SqliteProvider(DiscordClient client, string sqlConnectionString) : base(client)
         {
             Connection = new SqliteConnection(sqlConnectionString);
-        }
-
-        public SqliteProvider(SqliteConnection connection)
-        {
-            Connection = connection;
         }
 
         public override async Task Init()
@@ -50,7 +45,7 @@ namespace Commands.Providers
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Client.Logger.Error(e);
                     throw;
                 }
             }
@@ -83,7 +78,7 @@ namespace Commands.Providers
 
         private async Task ClientOnGuildCreated(DiscordClient sender, GuildCreateEventArgs e)
         {
-            var helper = new GuildSettingHelper(e.Guild?.Id ?? 0);
+            var helper = new GuildSettingHelper(sender, e.Guild?.Id ?? 0);
             SettingsMap.Add(e.Guild?.Id ?? 0, helper);
             await Set(e.Guild, helper);
         }
@@ -163,7 +158,7 @@ namespace Commands.Providers
         {
             if (SettingsMap.ContainsKey(guild?.Id ?? 0))
                 return SettingsMap[guild?.Id ?? 0];
-            var settings = new GuildSettingHelper(guild?.Id ?? 0);
+            var settings = new GuildSettingHelper(Client, guild?.Id ?? 0);
             await Set(settings.GuildId == 0 ? null : Client.Guilds[settings.GuildId], settings);
             return settings;
         }

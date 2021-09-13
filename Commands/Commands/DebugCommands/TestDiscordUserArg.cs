@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Types;
-using Commands.Utils;
+using DSharpPlus;
 using DSharpPlus.Entities;
 
 namespace Commands.Commands.DebugCommands
@@ -21,16 +21,20 @@ namespace Commands.Commands.DebugCommands
             }
         };
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            var user = collector.Get<DiscordUser>("User");
-            await message.ReplyAsync(user?.Id.ToString() ?? "null");
+            var user = ctx.GetArg<DiscordUser>("User");
+            await ctx.ReplyAsync(user?.Id.ToString() ?? "null");
         }
 
-        public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)
+        public override async Task Run(InteractionContext ctx)
         {
-            var user = collector.Get<DiscordUser>("User");
-            await interaction.FollowUpAsync(user?.Id.ToString() ?? "null");
+            var user = ctx.GetArg<DiscordUser>("User");
+            await ctx.FollowUpAsync(user?.Id.ToString() ?? "null");
+        }
+
+        public TestDiscordUserArg(DiscordClient client) : base(client)
+        {
         }
     }
 }

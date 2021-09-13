@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Utils;
-using DSharpPlus.Entities;
+using DSharpPlus;
 
 namespace CommandsTest.Commands.Admin
 {
@@ -11,18 +10,21 @@ namespace CommandsTest.Commands.Admin
         public override string GroupName => "Admin";
         public override string Description => "close bot ig";
         public override bool OwnerOnly => true;
-        public override bool Hidden => true;
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            await message.ReplyAsync("cya");
+            await ctx.ReplyAsync("cya");
             Environment.Exit(0);
         }
 
-        public override async Task Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)
+        public override async Task Run(InteractionContext ctx)
         {
-            await interaction.FollowUpAsync("cya");
+            await ctx.FollowUpAsync("cya");
             Environment.Exit(0);
+        }
+
+        public Shut(DiscordClient client) : base(client)
+        {
         }
     }
 }

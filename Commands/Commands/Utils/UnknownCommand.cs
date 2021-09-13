@@ -1,8 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Utils;
-using DSharpPlus.Entities;
+using DSharpPlus;
 
 namespace Commands.Commands.Utils
 {
@@ -12,19 +10,20 @@ namespace Commands.Commands.Utils
         public override bool Unknown => true;
         public override bool Hidden => true;
         public override string Description => "Command for unknown idk";
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            var privateChannel = message.Channel.Guild is null;
-            var extension = Extension;
-            var prefix = (await extension.Provider.Get(message.Channel.Guild)).Prefix;
-            var command = privateChannel ? "`help`" : $"`{prefix}help` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator} help`";
+            var privateChannel = ctx.Guild is null;
+            var extension = ctx.Extension;
+            var prefix = (await extension.Provider.Get(ctx.Guild)).Prefix;
+            var command = privateChannel ? "`help`" : $"`{prefix}help` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator} help`";
             var replyString = $"Unknown Command. Use {command} to get the command list";
-            await message.ReplyAsync(replyString);
+            await ctx.ReplyAsync(replyString);
         }
 
-        public override Task Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)
+        public override Task Run(InteractionContext ctx) => Task.CompletedTask;
+
+        public UnknownCommand(DiscordClient client) : base(client)
         {
-            throw new Exception("how");
         }
     }
 }

@@ -44,6 +44,10 @@ namespace Commands.Types
         }
 
         public override bool IsEmpty(DiscordChannel arg) => false;
+
+        public DiscordTextChannelArgumentType(DiscordClient client) : base(client)
+        {
+        }
     }
     
     [ArgumentType]
@@ -84,6 +88,10 @@ namespace Commands.Types
         }
 
         public override bool IsEmpty(DiscordChannel arg) => false;
+
+        public DiscordVoiceChannelArgumentType(DiscordClient client) : base(client)
+        {
+        }
     }
     
     [ArgumentType]
@@ -124,5 +132,9 @@ namespace Commands.Types
         }
 
         public override bool IsEmpty(DiscordChannel arg) => false;
+
+        public DiscordCategoryChannelArgumentType(DiscordClient client) : base(client)
+        {
+        }
     }
 }

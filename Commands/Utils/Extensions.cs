@@ -14,24 +14,10 @@ namespace Commands.Utils
             var builder = new DiscordMessageBuilder().WithAllowedMention(new UserMention()).WithContent(content);
             return message.RespondAsync(builder);
         }
-        public static Task<DiscordMessage> ReplyAsync(this DiscordMessage message, string content, IMention[] allowedMentions)
-        {
-            var builder = new DiscordMessageBuilder().WithAllowedMentions(allowedMentions).WithContent(content);
-            return message.RespondAsync(builder);
-        }
         public static Task<DiscordMessage> ReplyAsync(this DiscordMessage message, DiscordEmbed embed)
         {
             var builder = new DiscordMessageBuilder().WithAllowedMention(new UserMention()).WithEmbed(embed);
             return message.RespondAsync(builder);
-        }
-        public static Task<DiscordMessage> ReplyAsync(this DiscordMessage message, DiscordEmbed embed, IMention[] allowedMentions)
-        {
-            var builder = new DiscordMessageBuilder().WithAllowedMentions(allowedMentions).WithEmbed(embed);
-            return message.RespondAsync(builder);
-        }
-        public static Task<DiscordMessage> ReplyAsync(this DiscordMessage message, DiscordMessageBuilder builder, IMention[] allowedMentions)
-        {
-            return message.RespondAsync(builder.WithAllowedMentions(allowedMentions));
         }
         public static Task<DiscordMessage> ReplyAsync(this DiscordMessage message, DiscordMessageBuilder builder)
         {
@@ -43,19 +29,31 @@ namespace Commands.Utils
             var builder = new DiscordMessageBuilder().WithAllowedMention(new UserMention()).WithContent(content).WithEmbed(embed);
             return message.RespondAsync(builder);
         }
-        public static Task<DiscordMessage> ReplyAsync(this DiscordMessage message, string content, DiscordEmbed embed, IMention[] allowedMentions)
+        
+        public static Task FollowUpAsync(this DiscordInteraction message, string content, bool ephemeral = true)
         {
-            var builder = new DiscordMessageBuilder().WithAllowedMentions(allowedMentions).WithContent(content).WithEmbed(embed);
-            return message.RespondAsync(builder);
+            return message.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder{Content = content, IsEphemeral = ephemeral});
+        }
+        public static Task FollowUpAsync(this DiscordInteraction message, DiscordEmbed embed, bool ephemeral = true)
+        {
+            return message.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder(){IsEphemeral = ephemeral}.AddEmbed(embed));
+        }
+        public static Task FollowUpAsync(this DiscordInteraction interaction, DiscordMessageBuilder builder, bool ephemeral = true)
+        {
+            return interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().AddEmbeds(builder.Embeds).AddComponents(builder.Components).AsEphemeral(ephemeral).WithContent(builder.Content));
+        }
+        public static Task FollowUpAsync(this DiscordInteraction message, string content, DiscordEmbed embed, bool ephemeral = true)
+        {
+            return message.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder{Content = content, IsEphemeral = ephemeral}.AddEmbed(embed));
         }
         
         public static CommandsExtension UseCommands(this DiscordClient client, CommandsExtension commandsExtension)
         {
             client.AddExtension(commandsExtension);
-            return client.GetExtension<CommandsExtension>();
+            return client.GetCommandsExtension();
         }
 
-        public static CommandsExtension CommandsExtension(this DiscordClient client) =>
+        public static CommandsExtension GetCommandsExtension(this DiscordClient client) =>
             client.GetExtension<CommandsExtension>();
         
         
@@ -72,31 +70,11 @@ namespace Commands.Utils
             return Math.Floor(diff.TotalSeconds);
         }
         
-        
-        
-        public static async Task FollowUpAsync(this DiscordInteraction message, string content, bool ephemeral = true)
-        {
-            await message.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder{Content = content, IsEphemeral = ephemeral});
-        }
-        public static async Task FollowUpAsync(this DiscordInteraction message, DiscordEmbed embed, bool ephemeral = true)
-        {
-            await message.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder(){IsEphemeral = ephemeral}.AddEmbed(embed));
-        }
-        public static async Task FollowUpAsync(this DiscordInteraction message, DiscordMessageBuilder builder, bool ephemeral = true)
-        {
-            builder.WithAllowedMention(new UserMention());
-            await message.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder{Content = builder.Content, IsEphemeral = ephemeral}.AddEmbeds(builder.Embeds).AddComponents(builder.Components));
-        }
-        public static async Task FollowUpAsync(this DiscordInteraction message, string content, DiscordEmbed embed, bool ephemeral = true)
-        {
-            await message.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder{Content = content, IsEphemeral = ephemeral}.AddEmbed(embed));
-        }
-
         public static void Error<T>(this ILogger<T> logger, Exception e) => logger.LogError($"{e.Message}\n{e.StackTrace}");
 
-        public static void AddListener(this DiscordComponent component, Action<ComponentInteractionCreateEventArgs> listener)
+        public static void AddListener(this DiscordComponent component, Action<ComponentInteractionCreateEventArgs> listener, CommandDispatcher dispatcher)
         {
-            CommandsExtensionBase.Extension.Dispatcher.ComponentActions.Add(component.CustomId, listener);
+            dispatcher.ComponentActions.Add(component.CustomId, listener);
         }
     }
 }

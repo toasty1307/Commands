@@ -1,12 +1,15 @@
 ﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Utils;
-using DSharpPlus.Entities;
+using DSharpPlus;
 
 namespace Commands.Commands.Utils
 {
     public class Ping : Command
     {
+        public Ping(DiscordClient client) : base(client)
+        {
+        }
+
         public override string GroupName => "Utils";
         public override string[] Aliases => new[] {"latency"};
 
@@ -17,14 +20,14 @@ namespace Commands.Commands.Utils
         };
         public override string Description => "Ping, thats about it, yeah";
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            await message.ReplyAsync($"The bot's ping is {Client.Ping}ms");
+            await ctx.ReplyAsync($"The bot's ping is {ctx.Client.Ping}ms");
         }
 
-        public override async Task Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)
+        public override async Task Run(InteractionContext ctx)
         {
-            await interaction.FollowUpAsync($"The bot's ping is {Client.Ping}ms");
+            await ctx.FollowUpAsync($"The bot's ping is {ctx.Client.Ping}ms");
         }
     }
 }

@@ -13,11 +13,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Commands
 {
-    public class CommandDispatcher : CommandsExtensionBase
+    public class CommandDispatcher : CommandsBase
     {
-        public CommandRegistry Registry { get; set; }
+        public CommandRegistry Registry { get; }
         
-        public CommandDispatcher(CommandRegistry registry)
+        public CommandDispatcher(DiscordClient client, CommandRegistry registry) : base(client)
         {
             Registry = registry;
         }
@@ -49,42 +49,52 @@ namespace Commands
             }
         }
 
-        public async Task Handle(DiscordMessage message)
+        public async Task Handle(DiscordClient _, MessageCreateEventArgs args)
         {
-            var providerIsNull = Extension.Provider is null;
-            if (!providerIsNull)
-            {
-                try
-                {
-                    var helper = await Extension.Provider.Get(message.Channel.Guild);
-                    if (helper is null)
-                        await Extension.Provider.Set(message.Channel.Guild,
-                            new GuildSettingHelper(message.Channel.Guild?.Id ?? 0));
-                }
-                catch (Exception e)
-                {
-                    Client.Logger.Error(e);
-                }
-            }
-
-            if (!await ShouldHandle(message)) return;
-            
-            var words = await GetCommandString(message);
-            var commands = Registry.FindCommands(words[0].ToLower());
-            
+            var message = args.Message;
             try
             {
+                var providerIsNull = Extension.Provider is null;
+                if (!providerIsNull)
+                {
+                    try
+                    {
+                        var helper = await Extension.Provider.Get(message.Channel.Guild);
+                        if (helper is null)
+                            await Extension.Provider.Set(message.Channel.Guild,
+                                new GuildSettingHelper(Client, message.Channel.Guild?.Id ?? 0));
+                    }
+                    catch (Exception e)
+                    {
+                        Client.Logger.Error(e);
+                    }
+                }
+
+                if (!await ShouldHandle(message)) return;
+
+                var words = await GetCommandString(message);
+                var commands = Registry.FindCommands(words[0].ToLower());
+
+                switchStart: // cry about it
                 switch (commands.Length)
                 {
                     case 1:
                         await RunCommand(commands[0], message, words);
                         break;
-                    case > 1:   
+                    case <= 15 and > 1:
+                        commands = Registry.FindCommands(words[0].ToLower(), true);
+                        goto switchStart;
+                    case > 15:
                         await message.ReplyAsync("Multiple Commands Found, please be More Specific");
                         break;
                     case 0 when Registry.UnknownCommand is not null:
                         Extension.UnknownCommandRun(message);
-                        await Registry.UnknownCommand.Run(message, null);
+                        await Registry.UnknownCommand.Run(new CommandContext
+                        {
+                            Client = Client,
+                            Message = message,
+                            Collector = new ArgumentCollector()
+                        });
                         break;
                 }
             }
@@ -94,8 +104,9 @@ namespace Commands
             }
         }
 
-        public async Task Handle(DiscordInteraction interaction)
+        public async Task Handle(DiscordClient _, InteractionCreateEventArgs args)
         {
+            var interaction = args.Interaction;
             try
             {
                 if (interaction.Type is not InteractionType.ApplicationCommand) return;
@@ -110,7 +121,7 @@ namespace Commands
                         var helper = await Extension.Provider.Get(interaction.Channel.Guild);
                         if (helper is null)
                             await Extension.Provider.Set(interaction.Channel.Guild,
-                                new GuildSettingHelper(interaction.Channel.Guild?.Id ?? 0));
+                                new GuildSettingHelper(Client, interaction.Channel.Guild?.Id ?? 0));
                     }
                     catch (Exception e)
                     {
@@ -118,25 +129,13 @@ namespace Commands
                     }
                 }
                 
-                var args = interaction.Data.Options?.Select(x => x.Value?.ToString()).ToList() ?? new List<string>();
+                var argsList = interaction.Data.Options?.Select(x => x.Value?.ToString()).ToList() ?? new List<string>();
 
                 var commands = Registry.FindCommands(command.ToLower());
             
                 try
                 {
-                    switch (commands.Length)
-                    {
-                        case 1:
-                            await RunCommand(commands[0], interaction, args.ToArray());
-                            break;
-                        case > 1:   
-                            await interaction.FollowUpAsync("Multiple Commands found, please be more specific");
-                            break;
-                        case 0 when Registry.UnknownCommand is not null:
-                            Extension.UnknownCommandRun(interaction);
-                            await Registry.UnknownCommand.Run(interaction, null);
-                            break;
-                    }
+                    await RunCommand(commands[0], interaction, argsList.ToArray());
                 }
                 catch (Exception e)
                 {
@@ -178,9 +177,13 @@ namespace Commands
                     return;
                 }
                 var argumentCollector = FigureOutCommandArgsIdk(string.Join(" ", strings), command, message);
-                command.Collector = argumentCollector;
                 command.Throttle(message.Author);
-                await command.Run(message, argumentCollector);
+                await command.Run(new CommandContext
+                {
+                    Client = Client, 
+                    Message = message, 
+                    Collector = argumentCollector
+                });
             }
             catch (Exception e)
             {
@@ -189,7 +192,7 @@ namespace Commands
                     await message.ReplyAsync(e.Message);
                     return;
                 }
-                Client.Logger.Error(e);       
+                Client.Logger.Error(e);
                 var embed = new DiscordEmbedBuilder
                 {
                     Title = "Error",
@@ -199,6 +202,8 @@ namespace Commands
                     Footer = new DiscordEmbedBuilder.EmbedFooter{IconUrl = message.Author.AvatarUrl, Text = $"Command ran by {message.Author.Username}#{message.Author.Discriminator}"}
                 }.AddField("Error Message", $"`{e.Message}`").AddField("Stack Trace", $"```\n{e.StackTrace![..Math.Min(e.StackTrace.Length - 1, 1000)]}\n```");
                 await message.ReplyAsync(embed);
+                await message.ReplyAsync(
+                    $"here be the support server if you want to join ig: {Extension.Options.Invite}");
             }
         }
         
@@ -230,10 +235,14 @@ namespace Commands
                     await command.OnBlock(interaction, reason, missingUserPerms, missingClientPerms, seconds);
                     return;
                 }
-                var argumentCollector = FigureOutCommandArgsIdk(string.Join(" ", strings), command, interaction);
-                command.Collector = argumentCollector;
+                var argumentCollector = FigureOutCommandArgsIdk(strings, command, interaction);
                 command.Throttle(interaction.User);
-                await command.Run(interaction, argumentCollector);
+                await command.Run(new InteractionContext
+                {
+                    Client = Client,
+                    Interaction = interaction,
+                    Collector = argumentCollector
+                });
             }
             catch (Exception e)
             {
@@ -252,6 +261,8 @@ namespace Commands
                     Footer = new DiscordEmbedBuilder.EmbedFooter{IconUrl = interaction.User.AvatarUrl, Text = $"Command ran by {interaction.User.Username}#{interaction.User.Discriminator}"}
                 }.AddField("Error Message", $"`{e.Message}`").AddField("Stack Trace", $"```\n{e.StackTrace![..Math.Min(e.StackTrace.Length - 1, 1000)]}\n```");
                 await interaction.FollowUpAsync(embed);
+                await interaction.FollowUpAsync(
+                    $"here be the support server if you want to join ig: {Extension.Options.Invite}");
             }
         }
 
@@ -306,12 +317,11 @@ namespace Commands
 
             return collector;
         }
-        public ArgumentCollector FigureOutCommandArgsIdk(string commandString, Command command, DiscordInteraction interaction)
+        public ArgumentCollector FigureOutCommandArgsIdk(string[] strings, Command command, DiscordInteraction interaction)
         {
-            
             if (command.Arguments is null || command.Arguments.Length == 0) return new ArgumentCollector();
             var collector = new ArgumentCollector();
-            var words = SplitWords(commandString);
+            var words = strings;
             var inputArgs = words[..];
             var commandArgs = command.Arguments;
             var notOptionalArgs = commandArgs.Where(x => !x.Optional).ToList();
@@ -403,36 +413,29 @@ namespace Commands
             return true;
         }
 
-        public async Task Handle(ContextMenuInteractionCreateEventArgs interaction)
+        public async Task Handle(DiscordClient _, ContextMenuInteractionCreateEventArgs interaction)
         {
             var commandName = interaction.Interaction.Data.Name;
             var commands = Registry.FindCommands(commandName.ToLower());
             await interaction.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder{IsEphemeral = true});
             try
             {
-                switch (commands.Length)
+                var collector = new ArgumentCollector
                 {
-                    case 1:
-                        var collector = new ArgumentCollector
-                        {
-                            [commands[0].Arguments[0].Key] = interaction.Type switch
-                            {
-                                ApplicationCommandType.SlashCommand => throw new Exception("no"),
-                                ApplicationCommandType.UserContextMenu => interaction.TargetUser,
-                                ApplicationCommandType.MessageContextMenu => interaction.TargetMessage,
-                                _ => throw new ArgumentOutOfRangeException(nameof(interaction.Type))
-                            }
-                        };
-                        await commands[0].Run(interaction.Interaction, collector);
-                        break;
-                    case > 1:   
-                        await interaction.Interaction.FollowUpAsync("Multiple Commands found, please be more specific");
-                        break;
-                    case 0 when Registry.UnknownCommand is not null:
-                        Extension.UnknownCommandRun(interaction.Interaction);
-                        await Registry.UnknownCommand.Run(interaction.Interaction, null);
-                        break;
-                }
+                    [commands[0].Arguments[0].Key] = interaction.Type switch
+                    {
+                        ApplicationCommandType.SlashCommand => throw new Exception("no"),
+                        ApplicationCommandType.UserContextMenu => interaction.TargetUser,
+                        ApplicationCommandType.MessageContextMenu => interaction.TargetMessage,
+                        _ => throw new ArgumentOutOfRangeException(nameof(interaction.Type))
+                    }
+                };
+                await commands[0].Run(new InteractionContext
+                {
+                    Client = Client,
+                    Interaction = interaction.Interaction,
+                    Collector = collector
+                });
             }
             catch (Exception e)
             {
@@ -440,48 +443,60 @@ namespace Commands
             }
         }
 
-        public async Task Handle(ComponentInteractionCreateEventArgs interaction)
+        public async Task Handle(DiscordClient _, ComponentInteractionCreateEventArgs interaction)
         {
             await interaction.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder{IsEphemeral = true});
             if (ComponentActions.ContainsKey(interaction.Id))
                 ComponentActions[interaction.Id].Invoke(interaction);
         }
 
-        public async Task Handle(DiscordMessage message, DiscordMessage _)
+        public async Task Handle(DiscordClient _, MessageUpdateEventArgs args)
         {
-            var providerIsNull = Extension.Provider is null;
-            if (!providerIsNull)
-            {
-                try
-                {
-                    var helper = await Extension.Provider.Get(message.Channel.Guild);
-                    if (helper is null)
-                        await Extension.Provider.Set(message.Channel.Guild,
-                            new GuildSettingHelper(message.Channel.Guild?.Id ?? 0));
-                }
-                catch (Exception e)
-                {
-                    Client.Logger.Error(e);
-                }
-            }
-
-            if (!await ShouldHandle(message)) return;
-            
-            var words = await GetCommandString(message);
-            var commands = Registry.FindCommands(words[0].ToLower());
+            var message = args.Message;
+            if (!Extension.Options.NonCommandEditable) return;
             try
             {
+                var providerIsNull = Extension.Provider is null;
+                if (!providerIsNull)
+                {
+                    try
+                    {
+                        var helper = await Extension.Provider.Get(message.Channel.Guild);
+                        if (helper is null)
+                            await Extension.Provider.Set(message.Channel.Guild,
+                                new GuildSettingHelper(Client, message.Channel.Guild?.Id ?? 0));
+                    }
+                    catch (Exception e)
+                    {
+                        Client.Logger.Error(e);
+                    }
+                }
+
+                if (!await ShouldHandle(message)) return;
+
+                var words = await GetCommandString(message);
+                var commands = Registry.FindCommands(words[0].ToLower());
+
+                switchStart: // cry about it
                 switch (commands.Length)
                 {
                     case 1:
                         await RunCommand(commands[0], message, words);
                         break;
-                    case > 1:   
+                    case <= 15 and > 1:
+                        commands = Registry.FindCommands(words[0].ToLower(), true);
+                        goto switchStart;
+                    case > 15:
                         await message.ReplyAsync("Multiple Commands Found, please be More Specific");
                         break;
                     case 0 when Registry.UnknownCommand is not null:
                         Extension.UnknownCommandRun(message);
-                        await Registry.UnknownCommand.Run(message, null);
+                        await Registry.UnknownCommand.Run(new CommandContext
+                        {
+                            Client = Client,
+                            Message = message,
+                            Collector = new ArgumentCollector()
+                        });
                         break;
                 }
             }

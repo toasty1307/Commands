@@ -1,4 +1,6 @@
-﻿namespace Commands.Types
+﻿using DSharpPlus;
+
+namespace Commands.Types
 {
     [ArgumentType]
     public class StringArgumentType : ArgumentType<string>
@@ -11,5 +13,9 @@
 
         public override bool IsEmpty(string arg) =>
             string.IsNullOrEmpty(arg);
+
+        public StringArgumentType(DiscordClient client) : base(client)
+        {
+        }
     }
 }

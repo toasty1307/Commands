@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Commands.Commands.Utils;
 using Commands.CommandsStuff;
 using Commands.Types;
 using DSharpPlus;
@@ -12,14 +11,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Commands
 {
-    public class CommandRegistry : CommandsExtensionBase
+    public class CommandRegistry : CommandsBase
     {
-        public List<Command> Commands { get; set; } = new();
-        public List<Group> Groups { get; set; } = new();
-        public List<ArgumentType> ArgumentTypes { get; set; } = new();
-        
-        public Command UnknownCommand { get; set; }
+        public List<Command> Commands { get; } = new();
+        public List<Group> Groups { get; } = new();
+        public List<ArgumentType> ArgumentTypes { get; } = new();
+        public Command UnknownCommand { get; private set; }
 
+        public CommandRegistry(DiscordClient client) : base(client) { }
+        
         public T GetArgumentType<T>() where T : ArgumentType
         {
             return ArgumentTypes.First(x => x is T) as T;
@@ -37,7 +37,7 @@ namespace Commands
                 if (!type.IsSubclassOf(typeof(Command)))
                     continue;
                 
-                var command = (Command) Activator.CreateInstance(type);
+                var command = (Command) type.GetConstructor(new []{typeof(DiscordClient)})?.Invoke(new object[]{Client});
                 RegisterCommand(command);
             }
         }
@@ -59,6 +59,7 @@ namespace Commands
             if (command.Unknown) UnknownCommand = command;
             Commands.Add(command);
             Extension.CommandRegistered(command);
+            Command.Commands.Add(command);
             Client.Logger.LogInformation($"Registered Command {command.Name}");
         }
 
@@ -105,6 +106,11 @@ namespace Commands
                             typeof(CommandArgumentType))
                         {
                             oneOf.AddRange(Commands.Where(x => !x.Hidden).Select(x => new DiscordApplicationCommandOptionChoice(x.Name.ToString(), x.Name)));
+                        }
+                        if (commandArgument.OneOf is null && commandArgument.GetType().GenericTypeArguments[0] ==
+                            typeof(GroupArgumentType))
+                        {
+                            oneOf.AddRange(Groups.Select(x => new DiscordApplicationCommandOptionChoice(x.Name.ToLower(), x.Name)));
                         }
 
                         if (oneOf.Count == 0) 
@@ -162,7 +168,7 @@ namespace Commands
                 if (!type.IsSubclassOf(typeof(ArgumentType)))
                     throw new InvalidOperationException($"Type {type.FullName} has {nameof(ArgumentTypeAttribute)} but doesn't extend {nameof(ArgumentType)}.");
 
-                var argumentType = (ArgumentType) Activator.CreateInstance(type);
+                var argumentType = (ArgumentType) type.GetConstructor(new []{typeof(DiscordClient)})?.Invoke(new object[]{Client});
                 RegisterArgumentType(argumentType);
             }
         }
@@ -204,6 +210,7 @@ namespace Commands
             else
                 group.Id = 0;
             Extension.GroupRegistered(group);
+            Group.Groups.Add(group);
             Client.Logger.LogInformation($"Registered group {group.Name}");
             Groups.Add(group);
         }
@@ -225,16 +232,16 @@ namespace Commands
             Func<Command, string, bool> searchFunc;
             if (exact)
                 searchFunc = (command, searchStr) =>
-                    command.Name == searchStr ||
-                    command.Aliases is not null && command.Aliases.ToList().Contains(searchStr) ||
-                    $"{command.Group.Id}:{command.MemberName}" == searchStr;
+                    command.Name.ToLower() == searchStr ||
+                    command.Aliases is not null && command.Aliases.Select(x => x.ToLower()).ToList().Contains(searchStr) ||
+                    $"{command.Group.Id}:{command.MemberName}".ToLower() == searchStr;
             else
                 searchFunc = (command, searchStr) =>
                     command.Name.ToLower().Contains(searchStr) ||
                     command.Aliases is not null && command.Aliases.ToList().Any(x => x.ToLower().Contains(searchStr)) ||
-                    $"{command.Group.Id}:{command.MemberName}" == searchStr;
-
-            return Commands.Where(x => x.GetType() != typeof(UnknownCommand) && searchFunc(x, search.ToLower())).ToArray();
+                    $"{command.Group.Id}:{command.MemberName}".ToLower() == searchStr;
+            
+            return Commands.Where(x => !x.Hidden && searchFunc(x, search.ToLower())).ToArray();
 
         }
     }

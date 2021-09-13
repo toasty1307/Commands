@@ -8,10 +8,11 @@ using DSharpPlus.Entities;
 
 namespace Commands.CommandsStuff
 {
-    public abstract class Command : CommandsExtensionBase
+    public abstract class Command : CommandsBase
     {
+        public static List<Command> Commands { get; set; } = new();
+
         public Group Group { get; set; }
-        public ArgumentCollector Collector { get; set; }
 
         public virtual string Name => GetType().Name;
         public virtual bool RegisterSlashCommand => true;
@@ -34,14 +35,13 @@ namespace Commands.CommandsStuff
         public virtual bool Unknown => false;
 
 
-        public abstract Task Run(DiscordMessage message, ArgumentCollector collector);
+        public abstract Task Run(CommandContext ctx);
+        public abstract Task Run(InteractionContext ctx);
 
         public override string ToString() => $"{Group.Id}:{Name}";
-        public static implicit operator Command(string s) => Extension.Registry.Commands.First(x => $"{x.Group.Id}:{x.Name}" == s);
+        public static implicit operator Command(string s) => Commands.First(x => $"{x.Group.Id}:{x.Name}" == s);
 
-        public virtual async Task OnBlock(DiscordMessage message, string reason,
-            Permissions missingUserPermissions = Permissions.None,
-            Permissions missingClientPermissions = Permissions.None, uint seconds = 0)
+        public virtual async Task OnBlock(DiscordMessage message, string reason, Permissions missingUserPermissions = Permissions.None, Permissions missingClientPermissions = Permissions.None, uint seconds = 0)
         {
             switch (reason)
             {
@@ -91,9 +91,7 @@ namespace Commands.CommandsStuff
             }
         }
         
-        public virtual async Task OnBlock(DiscordInteraction interaction, string reason,
-            Permissions missingUserPermissions = Permissions.None,
-            Permissions missingClientPermissions = Permissions.None, uint seconds = 0)
+        public virtual async Task OnBlock(DiscordInteraction interaction, string reason, Permissions missingUserPermissions = Permissions.None, Permissions missingClientPermissions = Permissions.None, uint seconds = 0)
         {
             switch (reason)
             {
@@ -202,7 +200,6 @@ namespace Commands.CommandsStuff
         }
 
         private Dictionary<ulong, Throttle> _throttling = new();
-        public abstract Task Run(DiscordInteraction interaction, ArgumentCollector collector);
 
         public virtual async Task<(bool, string)> IsUsable(DiscordInteraction interaction)
         {
@@ -242,19 +239,17 @@ namespace Commands.CommandsStuff
             if (missingUserPermissions is not Permissions.None) return (false, "USER_PERMISSIONS");
             return (true, null);
         }
+
+        protected Command(DiscordClient client) : base(client)
+        {
+        }
     }
 
     public class Throttle
     {
-        public DateTime Start { get; set; }
+        public DateTime Start { get; init; }
         public int Usages { get; set; }
         public Task Timeout { get; set; }
-    }
-
-    public enum ArgsType
-    {
-        Single,
-        Multiple
     }
 
     public class ThrottlingOptions

@@ -28,23 +28,27 @@ namespace CommandsTest.Commands.Misc
             }
         };
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            var channel = collector.Get<DiscordChannel>("Channel") ?? message.Channel;
-            await message.DeleteAsync();
-            var text = collector.Get<string>("Text");
+            var channel = ctx.GetArg<DiscordChannel>("Channel") ?? ctx.Channel;
+            await ctx.Message.DeleteAsync();
+            var text = ctx.GetArg<string>("Text");
             var builder = new DiscordMessageBuilder().WithContent(text).WithAllowedMention(new UserMention());
             await channel.SendMessageAsync(builder);
         }
 
-        public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)
+        public override async Task Run(InteractionContext ctx)
         {
-            var channel = collector.Get<DiscordChannel>("Channel") ?? interaction.Channel;
-            var text = collector.Get<string>("Text");
-            var original = await interaction.GetOriginalResponseAsync();
-            if ((original.Flags & MessageFlags.Ephemeral) == 0) await interaction.DeleteOriginalResponseAsync();
+            var channel = ctx.GetArg<DiscordChannel>("Channel") ?? ctx.Channel;
+            var text = ctx.GetArg<string>("Text");
+            var original = await ctx.Interaction.GetOriginalResponseAsync();
+            if ((original.Flags & MessageFlags.Ephemeral) == 0) await ctx.Interaction.DeleteOriginalResponseAsync();
             var builder = new DiscordMessageBuilder().WithContent(text).WithAllowedMention(new UserMention());
             await channel.SendMessageAsync(builder);
+        }
+
+        public Echo(DiscordClient client) : base(client)
+        {
         }
     }
 }

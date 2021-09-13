@@ -10,7 +10,9 @@
       </None>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-00975" />
+        <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-00987" />
+        <PackageReference Include="DSharpPlus.Lavalink" Version="4.2.0-nightly-00987" />
+        <PackageReference Include="DSharpPlus.VoiceNext" Version="4.2.0-nightly-00987" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Commands\Commands.csproj" />

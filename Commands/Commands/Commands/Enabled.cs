@@ -1,8 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Types;
-using Commands.Utils;
-using DSharpPlus.Entities;
+using DSharpPlus;
 
 namespace Commands.Commands.Commands
 {
@@ -26,48 +25,52 @@ namespace Commands.Commands.Commands
             }
         };
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            var command = collector.Get<Command>("Command");
-            var enable = collector.Get<bool?>("Enable");
-            var provider = Extension.Provider;
+            var command = ctx.GetArg<Command>("Command");
+            var enable = ctx.GetArg<bool?>("Enable");
+            var provider = ctx.Extension.Provider;
             if (provider is null)
-                await message.ReplyAsync("No Provider is registered!");
+                await ctx.ReplyAsync("No Provider is registered!");
             else
             {
-                var enabled = (await provider.Get(message.Channel.Guild)).CommandStatuses[command];
+                var enabled = (await provider.Get(ctx.Guild)).CommandStatuses[command];
                 if (enable is null)
-                    await message.ReplyAsync($"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {message.Channel.Guild.Name}");
+                    await ctx.ReplyAsync($"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
                 else if (!command.Guarded)
                 {
-                    Extension.CommandStatusChanged(message.Channel.Guild, command, (bool) enable);
-                    await message.ReplyAsync($"Command {command.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
+                    ctx.Extension.CommandStatusChanged(ctx.Guild, command, (bool) enable);
+                    await ctx.ReplyAsync($"Command {command.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
                 }
                 else
-                    await message.ReplyAsync($"Command {command.Name} is guarded :|");
+                    await ctx.ReplyAsync($"Command {command.Name} is guarded :|");
             }
         }
 
-        public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)
+        public override async Task Run(InteractionContext ctx)
         {
-            var command = collector.Get<Command>("Command");
-            var enable = collector.Get<bool?>("Enable");
-            var provider = Extension.Provider;
+            var command = ctx.GetArg<Command>("Command");
+            var enable = ctx.GetArg<bool?>("Enable");
+            var provider = ctx.Extension.Provider;
             if (provider is null)
-                await interaction.FollowUpAsync("No Provider is registered!");
+                await ctx.FollowUpAsync("No Provider is registered!");
             else
             {
-                var enabled = (await provider.Get(interaction.Channel.Guild)).CommandStatuses[command];
+                var enabled = (await provider.Get(ctx.Guild)).CommandStatuses[command];
                 if (enable is null)
-                    await interaction.FollowUpAsync($"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {interaction.Channel.Guild.Name}");
+                    await ctx.FollowUpAsync($"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
                 else if (!command.Guarded)
                 {
-                    Extension.CommandStatusChanged(interaction.Channel.Guild, command, (bool) enable);
-                    await interaction.FollowUpAsync($"Command {command.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
+                    ctx.Extension.CommandStatusChanged(ctx.Guild, command, (bool) enable);
+                    await ctx.FollowUpAsync($"Command {command.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
                 }
                 else
-                    await interaction.FollowUpAsync($"Command {command.Name} is guarded :|");
+                    await ctx.FollowUpAsync($"Command {command.Name} is guarded :|");
             }
+        }
+
+        public Enabled(DiscordClient client) : base(client)
+        {
         }
     }
 }

@@ -27,27 +27,27 @@ namespace Commands.Commands.Commands
             }
         };
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            var prefix = (await Extension.Provider?.Get(message.Channel.Guild)!).Prefix ?? Extension.CommandPrefix;
-            var cs = collector.Get<string>("Code");
-            if (message.ReferencedMessage is null && message.Content.Length > prefix.Length + 4)
+            var prefix = (await ctx.Extension.Provider?.Get(ctx.Guild)!).Prefix ?? ctx.Extension.CommandPrefix;
+            var cs = ctx.GetArg<string>("Code");
+            if (ctx.Message.ReferencedMessage is null && ctx.Message.Content.Length > prefix.Length + 4)
             {
-	            await EvalCSharpCode(cs, message);
+	            await EvalCSharpCode(cs, ctx.Message);
 	            return;
             }
-            var code = message.ReferencedMessage?.Content ?? message.Content;
+            var code = ctx.Message.ReferencedMessage?.Content ?? ctx.Message.Content;
             if (!(code?.Contains(prefix) ?? false))
             {
-	            await EvalCSharpCode(code, message);
+	            await EvalCSharpCode(code, ctx.Message);
 	            return;
             }
             var index = code.IndexOf(' ');
             code = code[++index..];
-            await EvalCSharpCode(code, message);
+            await EvalCSharpCode(code, ctx.Message);
         }
 
-        public override Task Run(DiscordInteraction interaction, ArgumentCollector collector) => Task.CompletedTask;
+        public override Task Run(InteractionContext ctx) => Task.CompletedTask;
 
         private async Task EvalCSharpCode(string code, DiscordMessage message)
 		{
@@ -64,13 +64,17 @@ namespace Commands.Commands.Commands
 			var cs = code.Substring(cs1, cs2 - cs1);
 
 			var msg = await message.ReplyAsync("", new DiscordEmbedBuilder()
-				.WithColor(new("2F3136"))
+				.WithColor(new DiscordColor("2F3136"))
 				.WithDescription("Evaluating...")
 				.Build());
 
 			try
 			{
-				var globals = new TestVariables(message, Client, Extension);
+				var globals = new CommandContext
+				{
+					Client = Client,
+					Message = message
+				};
 
 				var sopts = ScriptOptions.Default;
 				sopts = sopts.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text",
@@ -81,7 +85,7 @@ namespace Commands.Commands.Commands
 
 				sopts = sopts.WithReferences(asm);
 
-				var script = CSharpScript.Create(cs, sopts, typeof(TestVariables));
+				var script = CSharpScript.Create(cs, sopts, typeof(CommandContext));
 				script.Compile();
 
 				var result = await script.RunAsync(globals);
@@ -110,29 +114,9 @@ namespace Commands.Commands.Commands
 				}.Build());
 			}
 		}
-    }
-    
-    public record TestVariables
-    {
-        public TestVariables(DiscordMessage msg, DiscordClient client, CommandsExtension extension)
-        {
-	        Client = client;
-	        Extension = extension;
-	        Message = msg;
-            Channel = msg.Channel;
-            Guild = Channel.Guild;
-            User = Message.Author;
-            Reply = Message.ReferencedMessage;
 
-            if (Guild != null) Member = Guild.GetMemberAsync(User.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+        public Eval(DiscordClient client) : base(client)
+        {
         }
-        public DiscordMessage Message { get; }
-        public DiscordMessage Reply { get; }
-        public DiscordChannel Channel { get; }
-        public DiscordGuild Guild { get; }
-        public DiscordUser User { get; }
-        public DiscordMember Member { get; }
-        public DiscordClient Client { get; }
-        public CommandsExtension Extension { get; }
     }
 }

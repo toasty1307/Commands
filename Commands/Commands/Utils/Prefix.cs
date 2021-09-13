@@ -1,8 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Types;
-using Commands.Utils;
-using DSharpPlus.Entities;
+using DSharpPlus;
 
 namespace Commands.Commands.Utils
 {
@@ -20,62 +19,66 @@ namespace Commands.Commands.Utils
             }
         };
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            var prefix = collector.Get<string>("Prefix");
+            var prefix = ctx.GetArg<string>("Prefix");
             var shouldSetNewPrefix = !string.IsNullOrWhiteSpace(prefix);
-            var provider = Extension.Provider;
+            var provider = ctx.Extension.Provider;
             if (shouldSetNewPrefix)
             {
                 if (provider is not null)
                 {
-                    if (message.Channel.Guild is not null)
+                    if (ctx.Guild is not null)
                     {
-                        var settings = await provider.Get(message.Channel.Guild);
+                        var settings = await provider.Get(ctx.Guild);
                         settings.Prefix = prefix;
-                        Extension.CommandPrefixChanged(message.Channel.Guild, prefix);
-                        await message.ReplyAsync($"Set the command prefix to {prefix}");
+                        ctx.Extension.CommandPrefixChanged(ctx.Guild, prefix);
+                        await ctx.ReplyAsync($"Set the command prefix to {prefix}");
                     }
                     else
-                        await message.ReplyAsync("Cant Set a prefix in DMs!");
+                        await ctx.ReplyAsync("Cant Set a prefix in DMs!");
                 }
                 else
-                    await message.ReplyAsync("No Settings Provider is registered!");
+                    await ctx.ReplyAsync("No Settings Provider is registered!");
             }
             else if (provider is not null)
-                await message.ReplyAsync(
-                    $"The prefix in {(message.Channel.Guild is null ? "DMs" : message.Channel.Guild.Name)} is {(message.Channel.Guild is null ? $"`@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`" : $"`{(await provider.Get(message.Channel.Guild))?.Prefix ?? Extension.CommandPrefix}` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`")}");
+                await ctx.ReplyAsync(
+                    $"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is {(ctx.Guild is null ? $"`@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`" : $"`{(await provider.Get(ctx.Guild))?.Prefix ?? ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`")}");
             else
-                await message.ReplyAsync($"The prefix in {(message.Channel.Guild is null ? "DMs" : message.Channel.Guild.Name)} is {(message.Channel.Guild is null ? $"`@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`" : $"`{Extension.CommandPrefix}` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`")}");
+                await ctx.ReplyAsync($"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is {(ctx.Guild is null ? $"`@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`" : $"`{ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`")}");
         }
 
-        public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)
+        public override async Task Run(InteractionContext ctx)
         {
-            var prefix = collector.Get<string>("Prefix");
+            var prefix = ctx.GetArg<string>("Prefix");
             var shouldSetNewPrefix = !string.IsNullOrWhiteSpace(prefix);
-            var provider = Extension.Provider;
+            var provider = ctx.Extension.Provider;
             if (shouldSetNewPrefix)
             {
                 if (provider is not null)
                 {
-                    if (interaction.Channel.Guild is not null)
+                    if (ctx.Guild is not null)
                     {
-                        var settings = await provider.Get(interaction.Channel.Guild);
+                        var settings = await provider.Get(ctx.Guild);
                         settings.Prefix = prefix;
-                        Extension.CommandPrefixChanged(interaction.Channel.Guild, prefix);
-                        await interaction.FollowUpAsync($"Set the command prefix to {prefix}");
+                        ctx.Extension.CommandPrefixChanged(ctx.Guild, prefix);
+                        await ctx.FollowUpAsync($"Set the command prefix to {prefix}");
                     }
                     else
-                        await interaction.FollowUpAsync("Cant Set a prefix in DMs!");
+                        await ctx.FollowUpAsync("Cant Set a prefix in DMs!");
                 }
                 else
-                    await interaction.FollowUpAsync("No Settings Provider is registered!");
+                    await ctx.FollowUpAsync("No Settings Provider is registered!");
             }
             else if (provider is not null)
-                await interaction.FollowUpAsync(
-                    $"The prefix in {(interaction.Channel.Guild is null ? "DMs" : interaction.Channel.Guild.Name)} is {(interaction.Channel.Guild is null ? $"`@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`" : $"`{(await provider.Get(interaction.Channel.Guild))?.Prefix ?? Extension.CommandPrefix}` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`")}");
+                await ctx.FollowUpAsync(
+                    $"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is `{(await provider.Get(ctx.Guild))?.Prefix ?? ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`");
             else 
-                await interaction.FollowUpAsync($"The prefix in {(interaction.Channel.Guild is null ? "DMs" : interaction.Channel.Guild.Name)} is {(interaction.Channel.Guild is null ? $"`@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`" : $"`{Extension.CommandPrefix}` or `@{Client.CurrentUser.Username}#{Client.CurrentUser.Discriminator}`")}");
+                await ctx.FollowUpAsync($"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is `{ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`");
+        }
+
+        public Prefix(DiscordClient client) : base(client)
+        {
         }
     }
 }

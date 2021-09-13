@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using DSharpPlus;
 
 namespace Commands.Types
 {
@@ -11,6 +12,10 @@ namespace Commands.Types
 
         private readonly List<string>
             _falsy = new[] {"false", "f", "no", "n", "disable", "disabled", "0", "-"}.ToList();
+
+        public BoolArgumentType(DiscordClient client) : base(client)
+        {
+        }
 
         public override bool Validate(string argString) =>
             _truthy.Contains(argString.ToLower()) || _falsy.Contains(argString.ToLower());

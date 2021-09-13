@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using DSharpPlus;
 using DSharpPlus.Entities;
 
 namespace Commands.Types
@@ -49,5 +50,9 @@ namespace Commands.Types
         }
 
         public override bool IsEmpty(DiscordUser arg) => arg is null;
+
+        public DiscordUserArgumentType(DiscordClient client) : base(client)
+        {
+        }
     }
 }

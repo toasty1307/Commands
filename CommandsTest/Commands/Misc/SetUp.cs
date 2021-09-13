@@ -1,8 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Utils;
-using DSharpPlus.Entities;
+using DSharpPlus;
 
 namespace CommandsTest.Commands.Misc
 {
@@ -12,16 +10,17 @@ namespace CommandsTest.Commands.Misc
         public override string Description => "setup stuff idk";
         public override bool GuildOnly => true;
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            var msg = await message.ReplyAsync("i'll try");
-            await Extension.Registry.RegisterSlashCommands(Extension.Registry.Commands.ToArray(), message.Channel.Guild);
+            var msg = await ctx.ReplyAsync("i'll try");
+            await ctx.Extension.Registry.RegisterSlashCommands(ctx.Extension.Registry.Commands.ToArray(), ctx.Guild);
             await msg.ModifyAsync("done ig");
         }
 
-        public override Task Run(DiscordInteraction interaction, ArgumentCollector argumentCollector)
+        public override Task Run(InteractionContext _) => Task.CompletedTask;
+
+        public SetUp(DiscordClient client) : base(client)
         {
-            throw new Exception("how did you manage to run this");
         }
     }
 }

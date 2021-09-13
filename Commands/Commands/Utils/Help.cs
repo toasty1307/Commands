@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Types;
 using Commands.Utils;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 
@@ -28,31 +29,39 @@ namespace Commands.Commands.Utils
             {
                 Key = "Command",
                 Optional = true
+            },
+            new Argument<GroupArgumentType>
+            {
+                Key = "Group",
+                Optional = true,
             }
         };
 
-        public override async Task Run(DiscordMessage message, ArgumentCollector collector)
+        public override async Task Run(CommandContext ctx)
         {
-            var command = collector.Get<Command>("Command");
-            var showAll = command is null;
-            if (showAll) await ProcessAllCommands(message);
-            else await ProcessCommand(message, command);
+            var command = ctx.GetArg<Command>("Command");
+            var group = ctx.GetArg<Group>("Group");
+            var showAll = command is null && group is null;
+            if (showAll) await ctx.ReplyAsync(await ProcessAllCommands(ctx.Guild, ctx.Author, ctx.Message.Id, ctx.Message.EditedTimestamp));
+            else if (command is not null) await ProcessCommand(ctx.Guild, ctx.Author, command);
+            else await ctx.ReplyAsync(await GetGroupEmbed(group, ctx.Guild, ctx.Author));
         }
 
-        public override async Task Run(DiscordInteraction interaction, ArgumentCollector collector)
+        public override async Task Run(InteractionContext ctx)
         {
-            var command = collector.Get<Command>("Command");
-            var showAll = command is null;
-            if (showAll) await ProcessAllCommands(interaction);
-            else await ProcessCommand(interaction, command);
+            var command = ctx.GetArg<Command>("Command");
+            var group = ctx.GetArg<Group>("Group");
+            var showAll = command is null && group is null;
+            if (showAll) await ctx.FollowUpAsync(await ProcessAllCommands(ctx.Guild, ctx.Author, ctx.Interaction.Id, DateTime.Now));
+            else if (command is not null) await ctx.FollowUpAsync(await ProcessCommand(ctx.Guild, ctx.Author, command));
+            else await ctx.FollowUpAsync(await GetGroupEmbed(group, ctx.Guild, ctx.Author));
         }
 
-        private async Task ProcessCommand(DiscordMessage message, Command command)
+        private async Task<DiscordEmbedBuilder> ProcessCommand(DiscordGuild guild, DiscordUser user, Command command)
         {
             try
             {
                 var currentUser = Client.CurrentUser;
-                var guild = message.Channel.Guild;
                 var mentionPrefix = $"@{currentUser.Username}#{currentUser.Discriminator} ";
                 var prefix = (await Extension.Provider.Get(guild)).Prefix;
                 if (string.IsNullOrEmpty(prefix)) prefix = Extension.CommandPrefix;
@@ -73,8 +82,8 @@ namespace Commands.Commands.Utils
                 {
                     Footer = new DiscordEmbedBuilder.EmbedFooter
                     {
-                        Text = $"Requested by {message.Author.Username}",
-                        IconUrl = message.Author.AvatarUrl
+                        Text = $"Requested by {user.Username}",
+                        IconUrl = user.AvatarUrl
                     },
                     Title = "Help Menu",
                     Timestamp = DateTimeOffset.Now,
@@ -87,66 +96,18 @@ namespace Commands.Commands.Utils
                     Color = new Optional<DiscordColor>(new DiscordColor("2F3136"))
                 };
             
-                await message.ReplyAsync(embed);
+                return embed;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Client.Logger.Error(e); 
                 throw;
             }
         }
-        private async Task ProcessCommand(DiscordInteraction interaction, Command command)
-        {
-            try
-            {
-                var currentUser = Client.CurrentUser;
-                var guild = interaction.Channel.Guild;
-                var mentionPrefix = $"@{currentUser.Username}#{currentUser.Discriminator} ";
-                var prefix = (await Extension.Provider.Get(guild)).Prefix;
-                if (string.IsNullOrEmpty(prefix)) prefix = Extension.CommandPrefix;
-                var format = $"`{prefix}{command.Name}";
-                if (command.Arguments is not null)
-                {
-                    foreach (var commandArgument in command.Arguments)
-                    {
-                        if (commandArgument.Optional)
-                            format += $" [{commandArgument.Key}]";
-                        else
-                            format += $" <{commandArgument.Key}>";
-                    }
-                }
-
-                format += $"` or {format.Replace(prefix, mentionPrefix)}`";
-                var embed = new DiscordEmbedBuilder
-                {
-                    Footer = new DiscordEmbedBuilder.EmbedFooter
-                    {
-                        Text = $"Requested by {interaction.User.Username}",
-                        IconUrl = interaction.User.AvatarUrl
-                    },
-                    Title = "Help Menu",
-                    Timestamp = DateTimeOffset.Now,
-                    Description = $"Command **{command.Name}**: {command.Description}\n\n" +
-                                  $"**Format**: {command.Format ?? format}\n" +
-                                  $"{(command.Aliases is not null ? $"**Aliases**: {string.Join(", ", command.Aliases)}\n" : "")}" +
-                                  $"**Group**: {command.Group.Name}(`{command.Group.Id}:{command.MemberName}`)\n" +
-                                  $"{(command.DetailedDescription is not null ? $"**Details**: {command.DetailedDescription}\n" : "")}" +
-                                  $"{(command.Examples is not null ? $"**Examples**:\n{string.Join("\n", command.Examples)}\n" : "")}",
-                    Color = new Optional<DiscordColor>(new DiscordColor("2F3136"))
-                };
-            
-                await interaction.FollowUpAsync(embed);
-            }
-            catch (Exception e)
-            {
-                Client.Logger.Error(e);                throw;
-            }
-        }
-        private async Task ProcessAllCommands(DiscordInteraction interaction)
+        private async Task<DiscordMessageBuilder> ProcessAllCommands(DiscordGuild guild, DiscordUser user, ulong id, DateTimeOffset? editedTimeProtectionIdk)
         {
             var groups = Extension.Registry.Groups;
             var currentUser = Client.CurrentUser;
-            var guild = interaction.Channel.Guild;
             var privateChannel = guild is null;
             var mentionPrefix = $"@{currentUser.Username}#{currentUser.Discriminator}";
             var prefix = (await Extension.Provider.Get(guild)).Prefix;
@@ -160,8 +121,8 @@ namespace Commands.Commands.Utils
             {
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
-                    Text = $"Requested by {interaction.User.Username}",
-                    IconUrl = interaction.User.AvatarUrl
+                    Text = $"Requested by {user.Username}",
+                    IconUrl = user.AvatarUrl
                 },
                 Title = "Help Menu",
                 Timestamp = DateTimeOffset.Now,
@@ -174,68 +135,33 @@ namespace Commands.Commands.Utils
                 if (string.IsNullOrWhiteSpace(commandInfo)) continue;
                 embed.AddField(group.Name, commandInfo, true);
             }
-            var component = new DiscordSelectComponent("helpCommandSelect", "Group",
+            var component = new DiscordSelectComponent($"helpCommandSelect_{id}_{editedTimeProtectionIdk}", "Group",
                 groups.Select(x => new DiscordSelectComponentOption(x.Name, x.Name)));
-            component.AddListener(SendGroupEmbed);
-            await interaction.FollowUpAsync(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(component));
+
+            async void Listener(ComponentInteractionCreateEventArgs args)
+            {
+                var group = Extension.Registry.Groups.First(x => string.Equals(x.Name, args.Values[0], StringComparison.CurrentCultureIgnoreCase));
+                await args.Interaction.FollowUpAsync(await GetGroupEmbed(group, args.Interaction.Channel.Guild, args.Interaction.User));
+            }
+
+            component.AddListener(Listener, Extension.Dispatcher);
+            return new DiscordMessageBuilder().AddEmbed(embed).AddComponents(component);
         }
-        private async Task ProcessAllCommands(DiscordMessage message)
+        private async Task<DiscordEmbed> GetGroupEmbed(Group group, DiscordGuild guild, DiscordUser user)
         {
-            var groups = Extension.Registry.Groups;
-            var currentUser = Client.CurrentUser;
-            var guild = message.Channel.Guild;
-            var privateChannel = guild is null;
-            var mentionPrefix = $"@{currentUser.Username}#{currentUser.Discriminator}";
-            var prefix = (await Extension.Provider.Get(guild)).Prefix;
-            if (string.IsNullOrEmpty(prefix)) prefix = Extension.CommandPrefix;
-            var completePrefixString = privateChannel
-                ? $"`{mentionPrefix} command`"
-                : $"`{mentionPrefix} command` or `{prefix} command`";
-            var description = $"To run a command in {(privateChannel ? "any server" : guild.Name)}, use {completePrefixString}. For example, {completePrefixString.Replace("command", "prefix")}\nTo run a command in DMs simply use `command` with no prefix\n\n Use `help <command>` to view detailed information about a specific command.\nUse `help all` to view a list of all commands, not just available ones\n\n\n__**Available Commands in {(privateChannel ? "this DM" : guild.Name)}**__";
-            
             var embed = new DiscordEmbedBuilder
             {
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
-                    Text = $"Requested by {message.Author.Username}",
-                    IconUrl = message.Author.AvatarUrl
+                    Text = $"Requested by {user.Username}",
+                    IconUrl = user.AvatarUrl
                 },
                 Title = "Help Menu",
                 Timestamp = DateTimeOffset.Now,
-                Description = description,
-                Color = new Optional<DiscordColor>(new DiscordColor("2F3136"))
-            };
-            foreach (var group in groups)
-            {
-                var commandInfo = string.Join("\n", group.Commands.Where(x => !x.Hidden).Select(x => $"**{x.Name}**: {x.Description}").ToArray());
-                if (string.IsNullOrWhiteSpace(commandInfo)) continue;
-                embed.AddField(group.Name, commandInfo, true);
-            }
-
-            var component = new DiscordSelectComponent("helpCommandSelect", "Group",
-                groups.Select(x => new DiscordSelectComponentOption(x.Name, x.Name)));
-            component.AddListener(SendGroupEmbed);
-            await message.ReplyAsync(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(component));
-        }
-
-        private async void SendGroupEmbed(ComponentInteractionCreateEventArgs args)
-        {
-            var group = Extension.Registry.Groups.First(x =>
-                string.Equals(x.Name, args.Values[0], StringComparison.CurrentCultureIgnoreCase));
-            var embed = new DiscordEmbedBuilder()
-            {
-                Footer = new DiscordEmbedBuilder.EmbedFooter
-                {
-                    Text = $"Requested by {args.Interaction.User.Username}",
-                    IconUrl = args.Interaction.User.AvatarUrl
-                },
-                Title = "Help Menu",
-                Timestamp = DateTimeOffset.Now,
-                Description = $"Group `{group.Name}`",
+                Description = $"Group `{group.Name}`\nDescription:`{group.Description}`",
                 Color = new Optional<DiscordColor>(new DiscordColor("2F3136"))
             };
             var currentUser = Client.CurrentUser;
-            var guild = args.Interaction.Channel.Guild;
             var mentionPrefix = $"@{currentUser.Username}#{currentUser.Discriminator} ";
             var prefix = (await Extension.Provider.Get(guild)).Prefix ?? Extension.CommandPrefix;
             foreach (var command in group.Commands)
@@ -261,7 +187,11 @@ namespace Commands.Commands.Utils
                                              $"{(command.Examples is not null ? $"**Examples**:\n{string.Join("\n", command.Examples)}\n" : "")}");
             }
 
-            await args.Interaction.FollowUpAsync(embed);
+            return embed;
+        }
+
+        public Help(DiscordClient client) : base(client)
+        {
         }
     }
 }

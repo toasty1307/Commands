@@ -13,12 +13,12 @@ namespace Commands
 {
     public class CommandsExtension : BaseExtension
     {
-        public CommandsConfig Options { get; set; }
-        public List<DiscordUser> Owners { get; set; } = new();
-        public List<ulong> OwnerIds { get; set; }
-        public CommandDispatcher Dispatcher { get; set; }
-        public CommandRegistry Registry { get; set; }
-        public SettingProvider Provider { get; set; }
+        public CommandsConfig Options { get; }
+        public List<DiscordUser> Owners { get; } = new();
+        public List<ulong> OwnerIds { get; }
+        public CommandDispatcher Dispatcher { get; private set; }
+        public CommandRegistry Registry { get; private set; }
+        public SettingProvider Provider { get; private set; }
 
         public event AsyncEventHandler<DiscordMessage> UnknownCommand; 
         public event AsyncEventHandler<SettingProvider> ProviderReady;
@@ -37,22 +37,21 @@ namespace Commands
         {
             Options = config;
             OwnerIds = Options.Owners.ToList();
-            Registry = new CommandRegistry();
-            Dispatcher = new CommandDispatcher(Registry);
         }
         
         protected override void Setup(DiscordClient client)
         {
             Client = client;
-            CommandsExtensionBase.Client = client;
             Provider?.Init();
             ProviderReadyInvoke(Provider);
+            Registry = new CommandRegistry(Client);
+            Dispatcher = new CommandDispatcher(Client, Registry);
             Client.Ready += (_, _) => FetchOwners();
-            Client.MessageCreated += (_, args) => Dispatcher.Handle(args.Message);
-            Client.InteractionCreated += (_, args) => Dispatcher.Handle(args.Interaction);
-            Client.ContextMenuInteractionCreated += (_, args) => Dispatcher.Handle(args);
-            Client.ComponentInteractionCreated += (_, args) => Dispatcher.Handle(args);
-            Client.MessageUpdated += (_, args) => Dispatcher.Handle(args.Message, args.MessageBefore);
+            Client.MessageCreated += Dispatcher.Handle;
+            Client.InteractionCreated += Dispatcher.Handle;
+            Client.ContextMenuInteractionCreated +=  Dispatcher.Handle;
+            Client.ComponentInteractionCreated += Dispatcher.Handle;
+            Client.MessageUpdated += Dispatcher.Handle;
         }
 
         public async Task FetchOwners()

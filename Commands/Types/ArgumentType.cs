@@ -3,20 +3,15 @@ using DSharpPlus;
 
 namespace Commands.Types
 {
-    public class ArgumentType : CommandsBase
+    public abstract class ArgumentType : CommandsBase
     {
-        public ArgumentType(DiscordClient client) : base(client)
-        {
-        }
+        protected ArgumentType(DiscordClient client) : base(client) { }
+        public abstract bool Validate(string argString);
     }
     
     public abstract class ArgumentType<T> : ArgumentType
     {
-        protected ArgumentType(DiscordClient client) : base(client)
-        {
-        }
-
-        public abstract bool Validate(string argString);
+        protected ArgumentType(DiscordClient client) : base(client) { }
         public abstract T Parse(string argString);
         public abstract bool IsEmpty(T arg);
     }

@@ -1,7 +1,6 @@
 ﻿#if DEBUG
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Types;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
@@ -14,14 +13,14 @@ namespace Commands.Commands.DebugCommands
 
         public override Argument[] Arguments => new Argument[]
         {
-            new Argument<DiscordUserArgumentType>
+            new()
             {
                 Key = "User",
                 Description = "yes"
             }
         };
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             var user = ctx.GetArg<DiscordUser>("User");
             await ctx.ReplyAsync(user?.Id.ToString() ?? "null");

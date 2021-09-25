@@ -1,15 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Providers;
+using Commands.Data;
+using Commands.Types;
 using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
+using Group = Commands.CommandsStuff.Group;
 
 namespace Commands
 {
@@ -29,11 +32,11 @@ namespace Commands
         public void AddInhibitor(Inhibitor<DiscordMessage> inhibitor) => MessageInhibitors.Add(inhibitor);
         public void AddInhibitor(Inhibitor<DiscordInteraction> inhibitor) => InteractionInhibitors.Add(inhibitor);
 
-        public async Task<string[]> GetCommandString(DiscordMessage message)
+        public string[] GetCommandString(DiscordMessage message)
         {
             try
             {
-                var prefix = (await Extension.Provider.Get(message.Channel.Guild)).Prefix;
+                var prefix = (Extension.Provider.Get(message.Channel.Guild)).Prefix;
                 if (string.IsNullOrEmpty(prefix)) prefix = Extension.CommandPrefix;
                 prefix = prefix.ToLower();
                 var mentionPrefix = $"<@!{Client.CurrentUser.Id}>";
@@ -54,25 +57,11 @@ namespace Commands
             var message = args.Message;
             try
             {
-                var providerIsNull = Extension.Provider is null;
-                if (!providerIsNull)
-                {
-                    try
-                    {
-                        var helper = await Extension.Provider.Get(message.Channel.Guild);
-                        if (helper is null)
-                            await Extension.Provider.Set(message.Channel.Guild,
-                                new GuildSettingHelper(Client, message.Channel.Guild?.Id ?? 0));
-                    }
-                    catch (Exception e)
-                    {
-                        Client.Logger.Error(e);
-                    }
-                }
+                MakeSureDataBaseThingExists(message.Channel.Guild);
+                
+                if (!ShouldHandle(message)) return;
 
-                if (!await ShouldHandle(message)) return;
-
-                var words = await GetCommandString(message);
+                var words = GetCommandString(message);
                 var commands = Registry.FindCommands(words[0].ToLower());
 
                 switchStart: // cry about it
@@ -89,7 +78,7 @@ namespace Commands
                         break;
                     case 0 when Registry.UnknownCommand is not null:
                         Extension.UnknownCommandRun(message);
-                        await Registry.UnknownCommand.Run(new CommandContext
+                        await Registry.UnknownCommand.Run(new MessageContext
                         {
                             Client = Client,
                             Message = message,
@@ -104,6 +93,21 @@ namespace Commands
             }
         }
 
+        private void MakeSureDataBaseThingExists(DiscordGuild guild)
+        {
+            var settings = Extension.Provider.Get(guild);
+            if (settings is null)
+            {
+                Extension.Provider.Set(guild, new GuildSettings
+                {
+                    Prefix = Extension.CommandPrefix,
+                    Commands = new Dictionary<Command, bool>(Extension.Registry.Commands.Select(x => new KeyValuePair<Command, bool>(x, true))),
+                    Groups = new Dictionary<Group, bool>(Extension.Registry.Groups.Select(x => new KeyValuePair<Group, bool>(x, true))),
+                    Id = guild?.Id ?? 0
+                }, true);
+            }
+        }
+
         public async Task Handle(DiscordClient _, InteractionCreateEventArgs args)
         {
             var interaction = args.Interaction;
@@ -113,22 +117,9 @@ namespace Commands
                 await interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder{IsEphemeral = true});
                 var command = interaction.Data.Name;
                 Client.Logger.LogInformation($"Received Interaction For Slash Command {command}");
-                var providerIsNull = Extension.Provider is null;
-                if (!providerIsNull)
-                {
-                    try
-                    {
-                        var helper = await Extension.Provider.Get(interaction.Channel.Guild);
-                        if (helper is null)
-                            await Extension.Provider.Set(interaction.Channel.Guild,
-                                new GuildSettingHelper(Client, interaction.Channel.Guild?.Id ?? 0));
-                    }
-                    catch (Exception e)
-                    {
-                        Client.Logger.Error(e);
-                    }
-                }
-                
+
+                MakeSureDataBaseThingExists(interaction.Channel.Guild);
+
                 var argsList = interaction.Data.Options?.Select(x => x.Value?.ToString()).ToList() ?? new List<string>();
 
                 var commands = Registry.FindCommands(command.ToLower());
@@ -180,7 +171,7 @@ namespace Commands
                 }
                 var argumentCollector = FigureOutCommandArgsIdk(string.Join(" ", strings), command, message);
                 command.Throttle(message.Author);
-                await command.Run(new CommandContext
+                await command.Run(new MessageContext
                 {
                     Client = Client, 
                     Message = message, 
@@ -277,48 +268,96 @@ namespace Commands
             var commandArgs = command.Arguments;
             var notOptionalArgs = commandArgs.Where(x => !x.Optional).ToArray();
             var invalidNumberOfArgs = notOptionalArgs.Length > inputArgs.Length;
-            if (inputArgs.Length == 0 && notOptionalArgs.Length == 0) return collector;
+            if (inputArgs.Length == 0 && notOptionalArgs.Length == 0 && !commandArgs.Any(x => x.Default is not null)) return collector;
             if (invalidNumberOfArgs) throw new FriendlyException("Invalid number of arguments");
 
             foreach (var commandArg in commandArgs)
             {
                 var argString = string.Empty;
                 try { argString = commandArg.Infinite ? string.Join(" ", inputArgs[commandArgs.ToList().IndexOf(commandArg)..]) : inputArgs[commandArgs.ToList().IndexOf(commandArg)]; }
-                catch { if (commandArg.Optional) break; }
-                if (commandArg.OneOf is not null && !commandArg.OneOf.Select(x => x.ToLower()).Contains(argString))
-                    throw new FriendlyException($"Argument {commandArg.Key} should be one of `{string.Join(", ", commandArg.OneOf)}`");
-                var genericType = commandArg.GetType().GetGenericArguments().First();
-                var argumentTypeObject = Registry.GetArgumentType(genericType);
-                var argumentTypeObjectType = argumentTypeObject.GetType();
-                var validateMethod = argumentTypeObjectType.GetMethod("Validate");
-                var validateResult = (bool) validateMethod!.Invoke(argumentTypeObject, new object[] {argString})!;
-                if (!validateResult)
-                {
-                    if (!commandArg.Optional)
-                    {
-                        Extension.CommandCanceled(command, "INVALID_ARGS", message);
-                        throw new FriendlyException($"Invalid Value (`{argString}`) for {commandArg.Key}");
-                    }
-                    var temp = inputArgs.ToList();
-                    temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1, inputArgs[commandArgs.ToList().IndexOf(commandArg)]);
-                    if (commandArg.Default is not null)
-                    {
-                        var parseMethod0 = argumentTypeObjectType.GetMethod("Parse");
-                        var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
-                        collector[commandArg.Key] = parseResult0;
-                    }
-                    inputArgs = temp.ToArray();
-                    continue;
-                }
+                catch { if (commandArg.Optional && commandArg.Default is null) continue; }
 
-                var parseMethod = argumentTypeObjectType.GetMethod("Parse");
-                var parseResult = parseMethod!.Invoke(argumentTypeObject, new object[] {argString});
-                collector[commandArg.Key] = parseResult;
+                if (commandArg.Types is null || commandArg.Types.Length == 0) commandArg.Types = new[] {typeof(string)};
+                if (commandArg.OneOf is not null && !commandArg.OneOf.Select(x => x.ToLower()).Contains(argString))
+                {
+                    if (commandArg.Optional)
+                    {
+                        var temp = inputArgs.ToList();
+                        if (temp.Count != 0)
+                            temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1, string.IsNullOrEmpty(argString) ? "_" : argString);
+                        if (commandArg.Default is not null)
+                        {
+                            var argumentTypeObject = Registry.GetArgumentTypeFromReturnType(commandArg.Types[0]);
+                            var argumentTypeObjectType = argumentTypeObject.GetType();
+                            var parseMethod0 = argumentTypeObjectType.GetMethod("Parse");
+                            var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
+                            collector[commandArg.Key] = parseResult0;
+                        }
+                        inputArgs = temp.ToArray();
+                        continue;
+                    }
+                    throw new FriendlyException($"Argument {commandArg.Key} should be one of `{string.Join(", ", commandArg.OneOf)}`");
+                }
+                foreach (var commandArgType in commandArg.Types)
+                {
+                    var argumentTypeObject = Registry.GetArgumentTypeFromReturnType(commandArgType);
+                    var argumentTypeObjectType = argumentTypeObject.GetType();
+                    var validateMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType.Validate));
+                    var validateResult = (bool) validateMethod!.Invoke(argumentTypeObject, new object[] {argString})!;
+                    if (!validateResult)
+                    {
+                        if (!commandArg.Optional && commandArgType == commandArg.Types[^1])
+                        {
+                            Extension.CommandCanceled(command, "INVALID_ARGS", message);
+                            throw new FriendlyException($"Invalid Value (`{argString}`) for {commandArg.Key}");
+                        }
+                        if (commandArgType != commandArg.Types[^1])
+                            continue;
+                        var temp = inputArgs.ToList();
+                        try
+                        {
+                            temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1,
+                                inputArgs[commandArgs.ToList().IndexOf(commandArg)]);
+                        }
+                        catch { /* TODO idk */ }
+
+                        if (commandArg.Default is not null)
+                        {
+                            var parseMethod0 = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.Parse));
+                            var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
+                            collector[commandArg.Key] = parseResult0;
+                            break;
+                        }
+                        inputArgs = temp.ToArray();
+                        break;
+                    }
+
+                    var parseMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.Parse));
+                    var parseResult = parseMethod!.Invoke(argumentTypeObject, new object[] {argString});
+                    var isEmptyMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.IsEmpty));
+                    var isEmptyResult = isEmptyMethod.Invoke(argumentTypeObject, new[] {parseResult});
+                    // TODO prompt that arg is empty?
+                    var argIsEmpty = (bool) isEmptyResult!;
+                    if (argIsEmpty && commandArg.Default is not null)
+                    {
+                        var anotherParse = parseMethod.Invoke(argumentTypeObject, new object[] {commandArg.Default});
+                        var anotherIsEmpty = isEmptyMethod.Invoke(argumentTypeObject, new[] {anotherParse});
+                        var anotherArgIsEmpty = (bool) anotherIsEmpty!;
+                        if (anotherArgIsEmpty)
+                            collector[commandArg.Key] = null;
+                        else
+                            collector[commandArg.Key] = anotherParse;
+                    }
+                    else
+                        collector[commandArg.Key] = parseResult;
+                    break;
+                }
                 if (commandArg.Infinite) break;
             }
 
             return collector;
         }
+
         public ArgumentCollector FigureOutCommandArgsIdk(string[] strings, Command command, DiscordInteraction interaction)
         {
             if (command.Arguments is null || command.Arguments.Length == 0) return new ArgumentCollector();
@@ -352,39 +391,65 @@ namespace Commands
                 try { argString = commandArg.Infinite ? string.Join(" ", inputArgs[commandArgs.ToList().IndexOf(commandArg)..]) : inputArgs[commandArgs.ToList().IndexOf(commandArg)]; }
                 catch { if (commandArg.Optional) break; }
                 if (string.IsNullOrEmpty(argString)) continue;
-                if (commandArg.OneOf is not null && !commandArg.OneOf.Select(x => x.ToLower()).Contains(argString.ToLower()))
-                    throw new FriendlyException($"Argument {commandArg.Key} should be one of `{string.Join(", ", commandArg.OneOf)}`");
-                var genericType = commandArg.GetType().GetGenericArguments().First();
-                var argumentTypeObject = Registry.GetArgumentType(genericType);
-                var argumentTypeObjectType = argumentTypeObject.GetType();
-                var validateMethod = argumentTypeObjectType.GetMethod("Validate");
-                var validateResult = (bool) validateMethod!.Invoke(argumentTypeObject, new object[] {argString})!;
-                if (!validateResult)
+                if (commandArg.Types is null || commandArg.Types.Length == 0) commandArg.Types = new[] {typeof(string)};
+                if (commandArg.OneOf is not null && !commandArg.OneOf.Select(x => x.ToLower()).Contains(argString))
                 {
-                    if (!commandArg.Optional)
+                    if (commandArg.Optional)
                     {
-                        Extension.CommandCanceled(command, "INVALID_ARGS", interaction);
-                        throw new FriendlyException($"Invalid Value (`{argString}`) for {commandArg.Key}");
+                        var temp = inputArgs.ToList();
+                        temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1, inputArgs[commandArgs.ToList().IndexOf(commandArg)]);
+                        if (commandArg.Default is not null)
+                        {
+                            var argumentTypeObject = Registry.GetArgumentTypeFromReturnType(commandArg.Types[0]);
+                            var argumentTypeObjectType = argumentTypeObject.GetType();
+                            var parseMethod0 = argumentTypeObjectType.GetMethod("Parse");
+                            var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
+                            collector[commandArg.Key] = parseResult0;
+                            break;
+                        }
+                        inputArgs = temp.ToArray();
+                        continue;
                     }
-                    var temp = inputArgs.ToList();
-                    temp.Insert(words.ToList().IndexOf(argString) + 1, argString);
-                    temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1, inputArgs[commandArgs.ToList().IndexOf(commandArg)]);
-                    temp.RemoveAt(temp.IndexOf(argString));
-                    inputArgs = temp.ToArray();
-                    if (commandArg.Default is not null)
-                    {
-                        var parseMethod0 = argumentTypeObjectType.GetMethod("Parse");
-                        var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
-                        collector[commandArg.Key] = parseResult0;
-                    }
-                    
-                    continue;
+                    throw new FriendlyException($"Argument {commandArg.Key} should be one of `{string.Join(", ", commandArg.OneOf)}`");
                 }
+                foreach (var commandArgType in commandArg.Types)
+                {
+                    var argumentTypeObject = Registry.GetArgumentTypeFromReturnType(commandArgType);
+                    var argumentTypeObjectType = argumentTypeObject.GetType();
+                    var validateMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType.Validate));
+                    var validateResult = (bool) validateMethod!.Invoke(argumentTypeObject, new object[] {argString})!;
+                    if (!validateResult)
+                    {
+                        if (!commandArg.Optional && commandArgType == commandArg.Types[^1])
+                        {
+                            Extension.CommandCanceled(command, "INVALID_ARGS", interaction);
+                            throw new FriendlyException($"Invalid Value (`{argString}`) for {commandArg.Key}");
+                        }
+                        if (commandArgType != commandArg.Types[^1])
+                            continue;
+                        var temp = inputArgs.ToList();
+                        temp.Insert(words.ToList().IndexOf(argString) + 1, argString);
+                        temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1, inputArgs[commandArgs.ToList().IndexOf(commandArg)]);
+                        temp.RemoveAt(temp.IndexOf(argString));
+                        inputArgs = temp.ToArray();
+                        if (commandArg.Default is not null)
+                        {
+                            var parseMethod0 = argumentTypeObjectType.GetMethod("Parse");
+                            var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
+                            collector[commandArg.Key] = parseResult0;
+                        }
+                    
+                        continue;
+                    }
 
-                var parseMethod = argumentTypeObjectType.GetMethod("Parse");
-                var parseResult = parseMethod!.Invoke(argumentTypeObject, new object[] {argString});
-                collector[commandArg.Key] = parseResult;
-                if (commandArg.Infinite) break;
+                    var parseMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.Parse));
+                    var parseResult = parseMethod!.Invoke(argumentTypeObject, new object[] {argString});
+                    var isEmptyMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.IsEmpty));
+                    var isEmptyResult = isEmptyMethod.Invoke(argumentTypeObject, new[] {parseResult});
+                    // TODO prompt that arg is empty?
+                    collector[commandArg.Key] = !(bool) isEmptyResult! ? parseResult : null;
+                    if (commandArg.Infinite) break;
+                }
             }
 
             return collector;
@@ -399,13 +464,13 @@ namespace Commands
             return matchStrings.ToArray();
         }
         
-        public async Task<bool> ShouldHandle(DiscordMessage message)
+        public bool ShouldHandle(DiscordMessage message)
         {
             if (message.Author.IsBot) return false;
             if (string.IsNullOrWhiteSpace(message.Content)) return false;
             
             // Check for prefix or ping
-            var prefix = (await Extension.Provider.Get(message.Channel.Guild)).Prefix;
+            var prefix = Extension.Provider.Get(message.Channel.Guild)?.Prefix ?? Extension.CommandPrefix;
             if (string.IsNullOrEmpty(prefix)) prefix = Extension.CommandPrefix;
             var mentionPrefix = $"<@!{Client.CurrentUser.Id}>";
             var prefixRegex = new Regex($@"^({prefix}|{mentionPrefix})");
@@ -458,25 +523,11 @@ namespace Commands
             if (!Extension.Options.NonCommandEditable) return;
             try
             {
-                var providerIsNull = Extension.Provider is null;
-                if (!providerIsNull)
-                {
-                    try
-                    {
-                        var helper = await Extension.Provider.Get(message.Channel.Guild);
-                        if (helper is null)
-                            await Extension.Provider.Set(message.Channel.Guild,
-                                new GuildSettingHelper(Client, message.Channel.Guild?.Id ?? 0));
-                    }
-                    catch (Exception e)
-                    {
-                        Client.Logger.Error(e);
-                    }
-                }
+                MakeSureDataBaseThingExists(message.Channel.Guild);
+                
+                if (!ShouldHandle(message)) return;
 
-                if (!await ShouldHandle(message)) return;
-
-                var words = await GetCommandString(message);
+                var words = GetCommandString(message);
                 var commands = Registry.FindCommands(words[0].ToLower());
 
                 switchStart: // cry about it
@@ -493,7 +544,7 @@ namespace Commands
                         break;
                     case 0 when Registry.UnknownCommand is not null:
                         Extension.UnknownCommandRun(message);
-                        await Registry.UnknownCommand.Run(new CommandContext
+                        await Registry.UnknownCommand.Run(new MessageContext
                         {
                             Client = Client,
                             Message = message,

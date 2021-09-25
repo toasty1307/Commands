@@ -17,14 +17,15 @@ namespace CommandsTest.Commands.MusicStuff
 
         public override Argument[] Arguments => new Argument[]
         {
-            new Argument<DiscordVoiceChannelArgumentType>
+            new()
             {
                 Key = "Channel",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(DiscordVoiceChannelArgumentType)}
             }
         };
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             if (Connect.LavaLink is null)
             {
@@ -105,12 +106,12 @@ namespace CommandsTest.Commands.MusicStuff
     {
         public override string GroupName => "MusicStuff";
         public override string Description => "aa";
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             if (Connect.LavaLinkVoice is null) return;
             await Connect.LavaLinkVoice.DisconnectAsync();
             Connect.LavaLinkVoice = null;
-            await Connect.ContextChannel.SendMessageAsync("ok");
+            if (Connect.ContextChannel is not null) await Connect.ContextChannel.SendMessageAsync("ok");
         }
 
         public override async Task Run(InteractionContext ctx)

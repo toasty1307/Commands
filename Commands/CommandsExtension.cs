@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Providers;
+using Commands.Data;
 using Commands.Types;
 using Commands.Utils;
 using DSharpPlus;
@@ -21,12 +22,11 @@ namespace Commands
         public SettingProvider Provider { get; private set; }
 
         public event AsyncEventHandler<DiscordMessage> UnknownCommand; 
-        public event AsyncEventHandler<DiscordInteraction> UnknownCommandInteration; 
-        public event AsyncEventHandler<SettingProvider> ProviderReady;
+        public event AsyncEventHandler<DiscordInteraction> UnknownCommandInteraction; 
         public event AsyncEventHandler<Command, DiscordMessage, string, Permissions, Permissions, uint> CommandBlock;
-        public event AsyncEventHandler<Command, DiscordInteraction, string, Permissions, Permissions, uint> CommandBlockInteration;
+        public event AsyncEventHandler<Command, DiscordInteraction, string, Permissions, Permissions, uint> CommandBlockInteraction;
         public event AsyncEventHandler<Command, string, DiscordMessage> CommandCancel;
-        public event AsyncEventHandler<Command, string, DiscordInteraction> CommandCancelInteration;
+        public event AsyncEventHandler<Command, string, DiscordInteraction> CommandCancelInteraction;
         public event AsyncEventHandler<Group> GroupRegister;
         public event AsyncEventHandler<Command> CommandRegister;
         public event AsyncEventHandler<DiscordGuild, string> CommandPrefixChange;
@@ -45,16 +45,16 @@ namespace Commands
         protected override void Setup(DiscordClient client)
         {
             Client = client;
-            Provider?.Init();
-            ProviderReadyInvoke(Provider);
             Registry = new CommandRegistry(Client);
             Dispatcher = new CommandDispatcher(Client, Registry);
-            Client.Ready += (_, _) => FetchOwners();
+            Provider = new NpgSqlProvider(Constants.CommandsDbConnectionString, Client);
+            Client.GuildDownloadCompleted += (_, _) => FetchOwners();
             Client.MessageCreated += Dispatcher.Handle;
             Client.InteractionCreated += Dispatcher.Handle;
             Client.ContextMenuInteractionCreated +=  Dispatcher.Handle;
             Client.ComponentInteractionCreated += Dispatcher.Handle;
             Client.MessageUpdated += Dispatcher.Handle;
+            _ = Task.Delay(0).ContinueWith(_ => Provider.Init());
         }
 
         public async Task FetchOwners()
@@ -64,9 +64,10 @@ namespace Commands
                 foreach (var ownerId in OwnerIds)
                     Owners.Add(await Client.GetUserAsync(ownerId));
             }
-            catch
+            catch (Exception e)
             {
-                Client.Logger.LogError("Error Fetching Owners");
+                Client.Logger.LogError("Error Fetching Owners:");
+                Client.Logger.Error(e);
             }
         }
 
@@ -76,6 +77,8 @@ namespace Commands
             Provider?.Init();
         }
 
+        #region DontOpen
+        
         public void CommandPrefixChanged(DiscordGuild channelGuild, string prefix)
         {
             CommandPrefixChange.SafeInvoke(channelGuild, prefix);
@@ -91,10 +94,6 @@ namespace Commands
         public void CommandRegistered(Command command)
         {
             CommandRegister.SafeInvoke(command);
-        }
-        public void ProviderReadyInvoke(SettingProvider provider)
-        {
-            ProviderReady.SafeInvoke(provider);
         }
         public void CommandBlocked(Command command, DiscordMessage message, string reason, Permissions missingUserPermissions = Permissions.None, Permissions missingClientPermissions = Permissions.None, uint seconds = 0)
         {
@@ -118,17 +117,19 @@ namespace Commands
         }
         public void CommandCanceled(Command command, string invalidArgs, DiscordInteraction interaction)
         {
-            CommandCancelInteration.SafeInvoke(command, invalidArgs, interaction);
+            CommandCancelInteraction.SafeInvoke(command, invalidArgs, interaction);
         }
 
         public void CommandBlocked(Command command, DiscordInteraction interaction, string reason, Permissions missingUserPermissions, Permissions missingClientPermissions, uint seconds)
         {
-            CommandBlockInteration.SafeInvoke(command, interaction, reason, missingUserPermissions,
+            CommandBlockInteraction.SafeInvoke(command, interaction, reason, missingUserPermissions,
                 missingClientPermissions, seconds);
         }
         public void UnknownCommandRun(DiscordInteraction interaction)
         {
-            UnknownCommandInteration.SafeInvoke(interaction);
+            UnknownCommandInteraction.SafeInvoke(interaction);
         }
+        
+        #endregion
     }
 }

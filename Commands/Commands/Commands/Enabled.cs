@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Types;
 using DSharpPlus;
 
 namespace Commands.Commands.Commands
@@ -14,27 +13,22 @@ namespace Commands.Commands.Commands
 
         public override Argument[] Arguments => new Argument[]
         {
-            new Argument<CommandArgumentType>
+            new()
             {
-                Key = "Command",
-                Optional = true
+                Key = "CommandOrGroup",
+                Types = new []{typeof(Group), typeof(Command)}
             },
-            new Argument<GroupArgumentType>
-            {
-                Key = "Group",
-                Optional = true
-            },
-            new Argument<BoolArgumentType>
+            new()
             {
                 Key = "Enable",
+                Types = new []{typeof(bool?)},
                 Optional = true
             }
         };
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
-            var command = ctx.GetArg<Command>("Command");
-            var group = ctx.GetArg<Group>("Group");
+            var group = ctx.GetArg<Group>("CommandOrGroup", out var isGroup);
             var enable = ctx.GetArg<bool?>("Enable");
             var provider = ctx.Extension.Provider;
 
@@ -43,11 +37,28 @@ namespace Commands.Commands.Commands
                 await ctx.ReplyAsync("No Provider is registered!");
                 return;
             }
-            if (group is null)
+
+            if (isGroup)
             {
-                var enabled = (await provider.Get(ctx.Guild)).CommandStatuses[command];
+                var enabled = provider.Get(ctx.Guild).Groups[group];
                 if (enable is null)
-                    await ctx.ReplyAsync($"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
+                    await ctx.ReplyAsync(
+                        $"The Group {@group.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
+                else if (!@group.Guarded)
+                {
+                    ctx.Extension.GroupStatusChanged(ctx.Guild, @group, (bool) enable);
+                    await ctx.ReplyAsync($"Group {@group.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
+                }
+                else
+                    await ctx.ReplyAsync($"Group {@group.Name} is guarded :|");
+            }
+            else
+            {
+                var command = ctx.GetArg<Command>("CommandOrGroup");
+                var enabled = provider.Get(ctx.Guild).Commands[command];
+                if (enable is null)
+                    await ctx.ReplyAsync(
+                        $"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
                 else if (!(command.Guarded || command.Group.Guarded))
                 {
                     ctx.Extension.CommandStatusChanged(ctx.Guild, command, (bool) enable);
@@ -56,25 +67,11 @@ namespace Commands.Commands.Commands
                 else
                     await ctx.ReplyAsync($"Command {command.Name} is guarded :|");
             }
-            else
-            {
-                var enabled = (await provider.Get(ctx.Guild)).GroupStatuses[group];
-                if (enable is null)
-                    await ctx.ReplyAsync($"The Group {group.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
-                else if (!group.Guarded)
-                {
-                    ctx.Extension.GroupStatusChanged(ctx.Guild, group, (bool) enable);
-                    await ctx.ReplyAsync($"Group {group.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
-                }
-                else
-                    await ctx.ReplyAsync($"Group {group.Name} is guarded :|");
-            }
         }
 
         public override async Task Run(InteractionContext ctx)
         {
-            var command = ctx.GetArg<Command>("Command");
-            var group = ctx.GetArg<Group>("Group");
+            var group = ctx.GetArg<Group>("CommandOrGroup", out var isGroup);
             var enable = ctx.GetArg<bool?>("Enable");
             var provider = ctx.Extension.Provider;
 
@@ -83,11 +80,28 @@ namespace Commands.Commands.Commands
                 await ctx.FollowUpAsync("No Provider is registered!");
                 return;
             }
-            if (group is null)
+
+            if (isGroup)
             {
-                var enabled = (await provider.Get(ctx.Guild)).CommandStatuses[command];
+                var enabled = provider.Get(ctx.Guild).Groups[group];
                 if (enable is null)
-                    await ctx.FollowUpAsync($"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
+                    await ctx.FollowUpAsync(
+                        $"The Group {@group.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
+                else if (!@group.Guarded)
+                {
+                    ctx.Extension.GroupStatusChanged(ctx.Guild, @group, (bool) enable);
+                    await ctx.FollowUpAsync($"Group {@group.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
+                }
+                else
+                    await ctx.FollowUpAsync($"Group {@group.Name} is guarded :|");
+            }
+            else
+            {
+                var command = ctx.GetArg<Command>("CommandOrGroup");
+                var enabled = provider.Get(ctx.Guild).Commands[command];
+                if (enable is null)
+                    await ctx.FollowUpAsync(
+                        $"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
                 else if (!(command.Guarded || command.Group.Guarded))
                 {
                     ctx.Extension.CommandStatusChanged(ctx.Guild, command, (bool) enable);
@@ -95,19 +109,6 @@ namespace Commands.Commands.Commands
                 }
                 else
                     await ctx.FollowUpAsync($"Command {command.Name} is guarded :|");
-            }
-            else
-            {
-                var enabled = (await provider.Get(ctx.Guild)).GroupStatuses[group];
-                if (enable is null)
-                    await ctx.FollowUpAsync($"The Group {group.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
-                else if (!group.Guarded)
-                {
-                    ctx.Extension.GroupStatusChanged(ctx.Guild, group, (bool) enable);
-                    await ctx.FollowUpAsync($"Group {group.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
-                }
-                else
-                    await ctx.FollowUpAsync($"Group {group.Name} is guarded :|");
             }
         }
 

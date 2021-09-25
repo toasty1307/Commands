@@ -53,7 +53,7 @@ namespace Commands.Types
     [ArgumentType]
     public class DiscordVoiceChannelArgumentType : ArgumentType<DiscordChannel>
     {
-        public Regex ChannelRegex = new Regex(@"\d+");
+        public Regex ChannelRegex = new(@"\d+");
         public override bool Validate(string argString)
         {
             var match = ChannelRegex.Match(argString);
@@ -97,7 +97,7 @@ namespace Commands.Types
     [ArgumentType]
     public class DiscordCategoryChannelArgumentType : ArgumentType<DiscordChannel>
     {
-        public Regex ChannelRegex = new Regex(@"\d+");
+        public Regex ChannelRegex = new(@"\d+");
         public override bool Validate(string argString)
         {
             var match = ChannelRegex.Match(argString);

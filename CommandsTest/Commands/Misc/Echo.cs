@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Types;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
@@ -16,19 +15,21 @@ namespace CommandsTest.Commands.Misc
 
         public override Argument[] Arguments => new Argument[]
         {
-            new Argument<DiscordTextChannelArgumentType>()
+            new()
             {
                 Key = "Channel",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(DiscordChannel)}
             },
-            new Argument<StringArgumentType>()
+            new()
             {
                 Key = "Text",
-                Infinite = true
+                Infinite = true,
+                Types = new []{typeof(string)}
             }
         };
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             var channel = ctx.GetArg<DiscordChannel>("Channel") ?? ctx.Channel;
             await ctx.Message.DeleteAsync();

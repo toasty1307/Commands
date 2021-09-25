@@ -3,21 +3,22 @@ using System.IO;
 using System.Threading.Tasks;
 using Commands;
 using Commands.CommandsStuff;
-using Commands.Providers;
 using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
 using DSharpPlus.Lavalink;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using LoggerFactory = Commands.Utils.LoggerFactory;
 
 namespace CommandsTest
 {
     public class CommandsTestBot
     {
         private DiscordClient Client { get; }
+        /*
         private DiscordClient Client2 { get; }
+        */
 
         public CommandsTestBot()
         {
@@ -57,9 +58,8 @@ namespace CommandsTest
                 }
             });
             commandsExtension.Registry.RegisterCommands(GetType().Assembly);
-            commandsExtension.SetProvider(new SqliteProvider(Client, "Data Source=Database.db"));
-            Client.GuildMemberAdded += CheckForBadNick;
-            Client.GuildMemberUpdated += CheckForBadNick;
+            Client.GuildMemberAdded += (_, args) => CheckForBadNick(args.Member, args.Member.Nickname ?? args.Member.Username);
+            Client.GuildMemberUpdated += (_, args) => CheckForBadNick(args.Member, args.NicknameAfter);
             Client.UseLavalink();
             
             
@@ -100,39 +100,23 @@ namespace CommandsTest
                 }
             });
             commandsExtension2.Registry.RegisterCommands(GetType().Assembly);
-            commandsExtension2.SetProvider(new SqliteProvider(Client2, "Data Source=Database.db"));
             Client2.GuildMemberAdded += CheckForBadNick;
             Client2.GuildMemberUpdated += CheckForBadNick;
             Client2.UseLavalink();
         */
         }
 
-        private async Task CheckForBadNick(DiscordClient client, GuildMemberUpdateEventArgs args)
+        private async Task CheckForBadNick(DiscordMember member, string nick)
         {
             try
             {
-                var nick = args.Member.Nickname ?? args.Member.Username;
                 if (nick is null or "💩") return;
                 if (!(nick[0] >= 48 && nick[0] <= 57 || nick[0] >= 65 && nick[0] <= 90 || nick[0] >= 97 && nick[0] <= 122))
-                    await args.Member.ModifyAsync(x => x.Nickname = "💩");
+                    await member.ModifyAsync(x => x.Nickname = "💩");
             }
             catch (Exception e)
             {
-                client.Logger.Error(e);
-            }
-        }
-        private async Task CheckForBadNick(DiscordClient client, GuildMemberAddEventArgs args)
-        {
-            try
-            {
-                var nick = args.Member.Nickname ?? args.Member.Username;
-                if (nick is null or "💩") return;
-                if (!(nick[0] >= 48 && nick[0] <= 57 || nick[0] >= 65 && nick[0] <= 90 || nick[0] >= 97 && nick[0] <= 122))
-                    await args.Member.ModifyAsync(x => x.Nickname = "💩");
-            }
-            catch (Exception e)
-            {
-                client.Logger.Error(e);
+                Client.Logger.Error(e);
             }
         }
 
@@ -141,7 +125,7 @@ namespace CommandsTest
             await Client.ConnectAsync(new DiscordActivity{ActivityType = ActivityType.Playing, Name = "Milk"}, UserStatus.Idle, DateTimeOffset.Now);
             /*
             await Client2.ConnectAsync(new DiscordActivity{ActivityType = ActivityType.Playing, Name = "Milk"}, UserStatus.Idle, DateTimeOffset.Now);
-        */
+            */
         }
 
         public Config GetConfig(string fileName)

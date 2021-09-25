@@ -11,7 +11,7 @@ namespace CommandsTest.Commands.Admin
         public override string Description => "close bot ig";
         public override bool OwnerOnly => true;
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             await ctx.ReplyAsync("cya");
             Environment.Exit(0);

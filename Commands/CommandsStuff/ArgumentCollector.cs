@@ -13,5 +13,16 @@ namespace Commands.CommandsStuff
         }
 
         public T Get<T>(string key)  => (T)this[key];
+        public T Get<T>(string key, out bool yes)
+        {
+            if (this[key] is T)
+            {
+                yes = true;
+                return (T) this[key];
+            }
+
+            yes = false;
+            return default;
+        }
     }
 }

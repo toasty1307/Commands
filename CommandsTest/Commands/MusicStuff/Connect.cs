@@ -16,7 +16,7 @@ namespace CommandsTest.Commands.MusicStuff
         public static LavalinkGuildConnection LavaLinkVoice { get; set; }
         public static DiscordChannel ContextChannel { get; set; }
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             if (LavaLink is not null) return;
 
@@ -78,7 +78,7 @@ namespace CommandsTest.Commands.MusicStuff
     {
         public override string GroupName => "MusicStuff";
         public override string Description => "a";
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             if (Connect.LavaLink is null)
             {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Types;
 using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -18,111 +17,131 @@ namespace Commands.Commands.Utils
 
         public override Argument[] Arguments => new Argument[]
         {
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Description"
             },
-            new Argument<StringArgumentType>
+            new()
             {
-                Key = "Choice1"
+                Key = "Choice1",
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
-                Key = "Choice2"
+                Key = "Choice2",
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice3",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice4",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice5",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice6",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice7",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice8",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice9",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice10",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice11",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice12",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice13",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice14",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice15",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice16",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice17",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice18",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice19",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Choice20",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             },
         };
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             var choices = Arguments.Select(x => ctx.GetArg<string>(x.Key)).ToArray()[1..].Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
             var description = ctx.GetArg<string>("Description");

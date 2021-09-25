@@ -1,16 +1,15 @@
-﻿using Commands.Types;
+﻿using System;
 
 namespace Commands.CommandsStuff
 {
     public class Argument
     {
-        public string Key { get; init; }
-        public string Description { get; init; }
-        public bool Optional { get; init; }
-        public string Default { get; init; }
-        public string[] OneOf { get; init; }
-        public bool Infinite { get; init; } 
+        public string Key { get; set; }
+        public string Description { get; set; }
+        public Type[] Types { get; set; } 
+        public bool Optional { get; set; }
+        public string Default { get; set; }
+        public string[] OneOf { get; set; }
+        public bool Infinite { get; set; }
     }
-
-    public class Argument<T> : Argument where T : ArgumentType { }
 }

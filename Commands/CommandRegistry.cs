@@ -29,6 +29,11 @@ namespace Commands
         {
             return ArgumentTypes.First(x => x.GetType() == type);
         }
+        
+        public ArgumentType GetArgumentTypeFromReturnType(Type type)
+        {
+            return ArgumentTypes.First(x => x.GetType().BaseType!.GetGenericArguments().First() == type || x.GetType() == type);
+        }
 
         public void RegisterCommands(Assembly assembly)
         {
@@ -102,44 +107,44 @@ namespace Commands
                             }
                         }
 
-                        if (commandArgument.OneOf is null && commandArgument.GetType().GenericTypeArguments[0] ==
+                        if (commandArgument.OneOf is null && commandArgument.Types is not null && (commandArgument.Types[0] ?? typeof(string)) ==
                             typeof(CommandArgumentType))
                         {
                             oneOf.AddRange(Commands.Where(x => !x.Hidden).Select(x => new DiscordApplicationCommandOptionChoice(x.Name.ToString(), x.Name)));
                         }
-                        if (commandArgument.OneOf is null && commandArgument.GetType().GenericTypeArguments[0] ==
+                        if (commandArgument.OneOf is null && commandArgument.Types is not null && (commandArgument.Types[0] ?? typeof(string)) ==
                             typeof(GroupArgumentType))
                         {
                             oneOf.AddRange(Groups.Select(x => new DiscordApplicationCommandOptionChoice(x.Name.ToLower(), x.Name)));
                         }
 
-                        if (oneOf.Count == 0) 
+                        if (oneOf.Count == 0 && commandArgument.Types is not null) 
                             slashCommandArguments.Add(new DiscordApplicationCommandOption(commandArgument.Key.ToLower(),
                             commandArgument.Description ?? "yet to add description",
-                            GetApplicationCommandOptionTypeFromArgumentType(GetArgumentType(commandArgument.GetType().GenericTypeArguments[0])), !commandArgument.Optional));
-                        else 
+                            GetApplicationCommandOptionTypeFromArgumentType(GetArgumentTypeFromReturnType(commandArgument.Types[0] ?? typeof(string))), !commandArgument.Optional));
+                        else if (commandArgument.Types is not null)
                             slashCommandArguments.Add(new DiscordApplicationCommandOption(commandArgument.Key.ToLower(),
                                 commandArgument.Description ?? "yet to add description",
-                                GetApplicationCommandOptionTypeFromArgumentType(GetArgumentType(commandArgument.GetType().GenericTypeArguments[0])), !commandArgument.Optional, oneOf));
+                                GetApplicationCommandOptionTypeFromArgumentType(GetArgumentTypeFromReturnType(commandArgument.Types[0] ?? typeof(string))), !commandArgument.Optional, oneOf));
                     }
                 }
 
-                DiscordApplicationCommand slashCommand;
-                if (slashCommandArguments.Count != 0)
-                    slashCommand = new DiscordApplicationCommand(command.Name.ToLower(), command.Description, slashCommandArguments, true);
-                else
-                    slashCommand = new DiscordApplicationCommand(command.Name.ToLower(), command.Description, defaultPermission:true);
+                var slashCommand = slashCommandArguments.Count != 0 ? 
+                    new DiscordApplicationCommand(command.Name.ToLower(), command.Description ?? "no description lolxd", slashCommandArguments, true) :
+                    new DiscordApplicationCommand(command.Name.ToLower(), command.Description ?? "no description lolxd", defaultPermission:true);
                 await guild.CreateApplicationCommandAsync(slashCommand);
-                if (command.Arguments is not null && command.Arguments[0].GetType().GenericTypeArguments[0].BaseType!.GenericTypeArguments[0] == typeof(DiscordUser))
+                if (command.Arguments?[0].Types != null && command.Arguments[0].Types[0] == typeof(DiscordUser))
                 {
                     slashCommand = new DiscordApplicationCommand(command.Name.ToLower(), null, null, true, ApplicationCommandType.UserContextMenu);
                     await guild.CreateApplicationCommandAsync(slashCommand);
                 }
-                else if (command.Arguments is not null && command.Arguments[0].GetType().GenericTypeArguments[0].BaseType!.GenericTypeArguments[0] == typeof(DiscordMessage))
+                else if (command.Arguments?[0].Types != null && command.Arguments[0].Types[0] == typeof(DiscordMessage))
                 {
                     slashCommand = new DiscordApplicationCommand(command.Name.ToLower(), null, null, true, ApplicationCommandType.MessageContextMenu);
                     await guild.CreateApplicationCommandAsync(slashCommand);
                 }
+
+                await Task.Delay(500);
             }
         }
 

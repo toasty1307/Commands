@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Types;
 using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -20,17 +19,22 @@ namespace Commands.Commands.Commands
 
         public override Argument[] Arguments => new Argument[]
         {
-            new Argument<StringArgumentType>
+            new()
             {
                 Key = "Code",
                 Infinite = true
             }
         };
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
-            var prefix = (await ctx.Extension.Provider?.Get(ctx.Guild)!).Prefix ?? ctx.Extension.CommandPrefix;
+            var prefix = ctx.Extension.Provider?.Get(ctx.Guild)!.Prefix ?? ctx.Extension.CommandPrefix;
             var cs = ctx.GetArg<string>("Code");
+            if (cs.ToLower().Contains("process") || cs.ToLower().Contains("shutdown"))
+            {
+	            await ctx.ReplyAsync("no.");
+	            return;
+            }
             if (ctx.Message.ReferencedMessage is null && ctx.Message.Content.Length > prefix.Length + 4)
             {
 	            await EvalCSharpCode(cs, ctx.Message);
@@ -70,7 +74,7 @@ namespace Commands.Commands.Commands
 
 			try
 			{
-				var globals = new CommandContext
+				var globals = new MessageContext
 				{
 					Client = Client,
 					Message = message
@@ -78,24 +82,24 @@ namespace Commands.Commands.Commands
 
 				var sopts = ScriptOptions.Default;
 				sopts = sopts.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text",
-					"System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "Microsoft.Extensions.Logging");
+					"System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "Microsoft.Extensions.Logging", "Commands.Utils", "Commands", "Commands.CommandsStuff", "Commands.Data", "Commands.Types");
 				var asm = AppDomain.CurrentDomain.GetAssemblies()
 					.Where(xa => !xa.IsDynamic && !string.IsNullOrWhiteSpace(xa.Location));
 
 
 				sopts = sopts.WithReferences(asm);
 
-				var script = CSharpScript.Create(cs, sopts, typeof(CommandContext));
+				var script = CSharpScript.Create(cs, sopts, typeof(MessageContext));
 				script.Compile();
 
 				var result = await script.RunAsync(globals);
-				if (result?.ReturnValue is (DiscordEmbedBuilder or DiscordEmbed))
+				if (result?.ReturnValue is DiscordEmbedBuilder or DiscordEmbed)
 					await msg.ModifyAsync(m => m.WithEmbed(result.ReturnValue as DiscordEmbedBuilder ?? result.ReturnValue as DiscordEmbed));
 				else if (result?.ReturnValue is not null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
 					await msg.ModifyAsync(new DiscordEmbedBuilder
 						{
 							Title = "Evaluation Result", Description = result.ReturnValue.ToString(),
-							Color = new DiscordColor("2F3136")
+							Color = new DiscordColor("2F3136"),
 						}.Build());
 				else
 					await msg.ModifyAsync(new DiscordEmbedBuilder

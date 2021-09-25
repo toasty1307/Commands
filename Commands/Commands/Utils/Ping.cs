@@ -20,7 +20,7 @@ namespace Commands.Commands.Utils
         };
         public override string Description => "Ping, thats about it, yeah";
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             await ctx.ReplyAsync($"The bot's ping is {ctx.Client.Ping}ms");
         }

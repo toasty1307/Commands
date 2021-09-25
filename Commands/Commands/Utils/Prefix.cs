@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Types;
 using DSharpPlus;
 
 namespace Commands.Commands.Utils
@@ -12,14 +11,15 @@ namespace Commands.Commands.Utils
 
         public override Argument[] Arguments => new Argument[]
         {
-            new Argument<StringArgumentType>()
+            new()
             {
                 Key = "Prefix",
-                Optional = true
+                Optional = true,
+                Types = new []{typeof(string)}
             }
         };
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             var prefix = ctx.GetArg<string>("Prefix");
             var shouldSetNewPrefix = !string.IsNullOrWhiteSpace(prefix);
@@ -30,10 +30,11 @@ namespace Commands.Commands.Utils
                 {
                     if (ctx.Guild is not null)
                     {
-                        var settings = await provider.Get(ctx.Guild);
-                        settings.Prefix = prefix;
-                        ctx.Extension.CommandPrefixChanged(ctx.Guild, prefix);
-                        await ctx.ReplyAsync($"Set the command prefix to {prefix}");
+                        _ = Task.Run(async () =>
+                        {
+                            ctx.Extension.CommandPrefixChanged(ctx.Guild, prefix);
+                            await ctx.ReplyAsync($"Set the command prefix to {prefix}"); 
+                        });
                     }
                     else
                         await ctx.ReplyAsync("Cant Set a prefix in DMs!");
@@ -43,7 +44,7 @@ namespace Commands.Commands.Utils
             }
             else if (provider is not null)
                 await ctx.ReplyAsync(
-                    $"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is {(ctx.Guild is null ? $"`@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`" : $"`{(await provider.Get(ctx.Guild))?.Prefix ?? ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`")}");
+                    $"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is {(ctx.Guild is null ? $"`@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`" : $"`{(provider.Get(ctx.Guild))?.Prefix ?? ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`")}");
             else
                 await ctx.ReplyAsync($"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is {(ctx.Guild is null ? $"`@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`" : $"`{ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`")}");
         }
@@ -59,7 +60,7 @@ namespace Commands.Commands.Utils
                 {
                     if (ctx.Guild is not null)
                     {
-                        var settings = await provider.Get(ctx.Guild);
+                        var settings = provider.Get(ctx.Guild);
                         settings.Prefix = prefix;
                         ctx.Extension.CommandPrefixChanged(ctx.Guild, prefix);
                         await ctx.FollowUpAsync($"Set the command prefix to {prefix}");
@@ -72,7 +73,7 @@ namespace Commands.Commands.Utils
             }
             else if (provider is not null)
                 await ctx.FollowUpAsync(
-                    $"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is `{(await provider.Get(ctx.Guild))?.Prefix ?? ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`");
+                    $"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is `{(provider.Get(ctx.Guild))?.Prefix ?? ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`");
             else 
                 await ctx.FollowUpAsync($"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is `{ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`");
         }

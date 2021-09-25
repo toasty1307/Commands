@@ -5,37 +5,55 @@ using System.Threading.Tasks;
 using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.Logging;
+
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Commands.CommandsStuff
 {
     public abstract class Command : CommandsBase
     {
-        public static List<Command> Commands { get; set; } = new();
+        public static readonly List<Command> Commands = new();
 
         public Group Group { get; set; }
 
         public virtual string Name => GetType().Name;
+
         public virtual bool RegisterSlashCommand => true;
+
         public virtual string[] Aliases => null;
+
         public abstract string GroupName { get; }
+        
         public virtual string MemberName => GetType().Name;
-        public abstract string Description { get; }
-        public virtual string Format => null;
+
+        public virtual string Description => null;
+
         public virtual string DetailedDescription => null;
+
         public virtual string[] Examples => null;
+
         public virtual bool GuildOnly => false;
+
         public virtual bool OwnerOnly => false;
+
         public virtual Permissions ClientPermissions => Permissions.None;
+
         public virtual Permissions UserPermissions => Permissions.None;
+
         public virtual bool Nsfw => false;
+
         public virtual ThrottlingOptions ThrottlingOptions => null;
+
         public virtual Argument[] Arguments => null;
+
         public virtual bool Guarded => false;
+
         public virtual bool Hidden => false;
+
         public virtual bool Unknown => false;
 
-
-        public abstract Task Run(CommandContext ctx);
+        public abstract Task Run(MessageContext ctx);
         public abstract Task Run(InteractionContext ctx);
 
         public override string ToString() => $"{Group.Id}:{Name}";
@@ -175,13 +193,26 @@ namespace Commands.CommandsStuff
             if (Nsfw && !message.Channel.IsNSFW) return (false, "NSFW");
             try
             {
-                if (!(await Extension.Provider.Get(message.Channel.Guild)).CommandStatuses[this]) return (false, "DISABLED");
-                if (!(await Extension.Provider.Get(message.Channel.Guild)).GroupStatuses[Group]) return (false, "GROUP_DISABLED");
+                if (!(Extension.Provider.Get(message.Channel.Guild)).Commands[this]) return (false, "DISABLED");
+                if (!(Extension.Provider.Get(message.Channel.Guild)).Groups[Group]) return (false, "GROUP_DISABLED");
             }
             catch (Exception e)
             {
                 Client.Logger.Error(e);
-                await Extension.Provider?.Init()!;
+                if (!Extension.Provider.Get(message.Channel.Guild).Commands.ContainsKey(this))
+                {
+                    var guildSettings = Extension.Provider.Get(message.Channel.Guild);
+                    guildSettings.Commands.Add(this, true);
+                    Extension.Provider.Set(message.Channel.Guild, guildSettings, true);
+                    Client.Logger.LogWarning("Command was not in DB, added it");
+                }
+                if (!Extension.Provider.Get(message.Channel.Guild).Groups.ContainsKey(Group))
+                {
+                    var guildSettings = Extension.Provider.Get(message.Channel.Guild);
+                    guildSettings.Groups.Add(Group, true);
+                    Extension.Provider.Set(message.Channel.Guild, guildSettings, true);
+                    Client.Logger.LogWarning("Group was not in DB, added it");
+                }
                 return (true, null);
             }
             if (GetThrottle(message.Author) is not null) return (false, "THROTTLING");
@@ -216,13 +247,12 @@ namespace Commands.CommandsStuff
             if (Nsfw && !interaction.Channel.IsNSFW) return (false, "NSFW");
             try
             {
-                if (!(await Extension.Provider.Get(interaction.Channel.Guild)).CommandStatuses[this]) return (false, "DISABLED");
-                if (!(await Extension.Provider.Get(interaction.Channel.Guild)).GroupStatuses[Group]) return (false, "GROUP_DISABLED");
+                if (!(Extension.Provider.Get(interaction.Channel.Guild)).Commands[this]) return (false, "DISABLED");
+                if (!(Extension.Provider.Get(interaction.Channel.Guild)).Groups[Group]) return (false, "GROUP_DISABLED");
             }
             catch (Exception e)
             {
                 Client.Logger.Error(e);
-                await Extension.Provider?.Init()!;
                 return (true, null);
             }
             if (GetThrottle(interaction.User) is not null) return (false, "THROTTLING");
@@ -248,21 +278,61 @@ namespace Commands.CommandsStuff
             return (true, null);
         }
 
-        protected Command(DiscordClient client) : base(client)
-        {
-        }
+        protected Command(DiscordClient client) : base(client) { }
     }
 
     public class Throttle
     {
-        public DateTime Start { get; init; }
-        public int Usages { get; set; }
-        public Task Timeout { get; set; }
+        private readonly DateTime _start;
+        private int _usages;
+        private Task _timeout;
+
+        public DateTime Start
+        {
+            get => _start;
+            init => _start = value;
+        }
+
+        public int Usages
+        {
+            get => _usages;
+            init => _usages = value;
+        }
+
+        public Task Timeout
+        {
+            get => _timeout;
+            init => _timeout = value;
+        }
     }
 
     public class ThrottlingOptions
     {
-        public int Usages { get; set; }
-        public float Duration { get; set; }
+        private int _usages;
+        private float _duration;
+        private string _id;
+
+        public string Id
+        {
+            get => _id;
+            init => _id = value;
+        }
+
+        public int Usages
+        {
+            get => _usages;
+            init => _usages = value;
+        }
+
+        public float Duration
+        {
+            get => _duration;
+            init => _duration = value;
+        }
+
+        public ThrottlingOptions()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
     }
 }

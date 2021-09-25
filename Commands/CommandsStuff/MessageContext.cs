@@ -7,11 +7,15 @@ namespace Commands.CommandsStuff
 {
     public class CommandContext
     {
-        public DiscordMessage Message { get; init; }
         public ArgumentCollector Collector { get; init; }
         public DiscordClient Client { get; init; }
         public CommandsExtension Extension => Client.GetCommandsExtension();
+        public T GetArg<T>(string key, out bool yes) => Collector.Get<T>(key, out yes);
         public T GetArg<T>(string key) => Collector.Get<T>(key);
+    }
+    public class MessageContext : CommandContext
+    {
+        public DiscordMessage Message { get; init; }
         public DiscordGuild Guild => Message.Channel.Guild;
         public DiscordChannel Channel => Message.Channel;
         public DiscordUser Author => Message.Author;
@@ -21,14 +25,23 @@ namespace Commands.CommandsStuff
         public Task<DiscordMessage> ReplyAsync(string content, DiscordEmbed embed) => Message.ReplyAsync(content, embed);
         public Task<DiscordMessage> ReplyAsync(DiscordEmbed embed) => Message.ReplyAsync(embed);
         public Task<DiscordMessage> ReplyAsync(DiscordMessageBuilder builder) => Message.ReplyAsync(builder);
+        public void Deconstruct(out ArgumentCollector collector, out DiscordClient client, out CommandsExtension extension, out DiscordMessage message,
+            out DiscordGuild guild, out DiscordChannel channel, out DiscordUser author, out DiscordMember member, out bool privateChannel)
+        {
+            collector = Collector;
+            client = Client;
+            extension = Extension;
+            message = Message;
+            guild = Guild;
+            channel = Channel;
+            author = Author;
+            member = Member;
+            privateChannel = PrivateChannel;
+        }
     }
-    public class InteractionContext
+    public class InteractionContext : CommandContext
     {
         public DiscordInteraction Interaction { get; init; }
-        public DiscordClient Client { get; init; }
-        public CommandsExtension Extension => Client.GetCommandsExtension();
-        public ArgumentCollector Collector { get; init; }
-        public T GetArg<T>(string key) => Collector.Get<T>(key);
         public DiscordGuild Guild => Interaction.Channel.Guild;
         public DiscordChannel Channel => Interaction.Channel;
         public DiscordUser Author => Interaction.User;
@@ -37,5 +50,17 @@ namespace Commands.CommandsStuff
         public Task FollowUpAsync(string content, DiscordEmbed embed, bool ephemeral = true) => Interaction.FollowUpAsync(content, embed, ephemeral);
         public Task FollowUpAsync(DiscordEmbed embed, bool ephemeral = true) => Interaction.FollowUpAsync(embed, ephemeral);
         public Task FollowUpAsync(DiscordMessageBuilder builder, bool ephemeral = true) => Interaction.FollowUpAsync(builder, ephemeral);
+        public void Deconstruct(out ArgumentCollector collector, out DiscordClient client, out CommandsExtension extension, out DiscordInteraction interaction,
+            out DiscordGuild guild, out DiscordChannel channel, out DiscordUser author, out DiscordMember member)
+        {
+            collector = Collector;
+            client = Client;
+            extension = Extension;
+            interaction = Interaction;
+            guild = Guild;
+            channel = Channel;
+            author = Author;
+            member = Member;
+        }
     }
 }

@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
-using Commands.Types;
 using DSharpPlus;
 
 namespace CommandsTest.Commands.MusicStuff
@@ -14,13 +13,14 @@ namespace CommandsTest.Commands.MusicStuff
 
         public override Argument[] Arguments => new Argument[]
         {
-            new Argument<StringArgumentType>
+            new()
             {
-                Key = "Uri"
+                Key = "Uri",
+                Types = new []{typeof(string)}
             }
         };
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             var uri = new Uri(ctx.GetArg<string>("Uri"));
             if (Connect.LavaLinkVoice is null) return;
@@ -60,7 +60,7 @@ namespace CommandsTest.Commands.MusicStuff
         public override string GroupName => "MusicStuff";
         public override string Description => "adwd";
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             if (Connect.LavaLinkVoice is null) return;
             await Connect.LavaLinkVoice.PauseAsync();
@@ -84,7 +84,7 @@ namespace CommandsTest.Commands.MusicStuff
         public override string GroupName => "MusicStuff";
         public override string Description => "adwd";
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             if (Connect.LavaLinkVoice is null) return;
             await Connect.LavaLinkVoice.ResumeAsync();
@@ -108,7 +108,7 @@ namespace CommandsTest.Commands.MusicStuff
         public override string GroupName => "MusicStuff";
         public override string Description => "adwd";
 
-        public override async Task Run(CommandContext ctx)
+        public override async Task Run(MessageContext ctx)
         {
             if (Connect.LavaLinkVoice is null) return;
             await Connect.LavaLinkVoice.StopAsync();

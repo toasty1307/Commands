@@ -6,7 +6,7 @@ namespace Commands.Types
     public class StringArgumentType : ArgumentType<string>
     {
         public override bool Validate(string argString) =>
-            true;
+            !string.IsNullOrEmpty(argString);
 
         public override string Parse(string argString) =>
             argString;
@@ -14,8 +14,6 @@ namespace Commands.Types
         public override bool IsEmpty(string arg) =>
             string.IsNullOrEmpty(arg);
 
-        public StringArgumentType(DiscordClient client) : base(client)
-        {
-        }
+        public StringArgumentType(DiscordClient client) : base(client) { }
     }
 }

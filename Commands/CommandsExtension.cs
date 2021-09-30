@@ -120,7 +120,7 @@ namespace Commands
             CommandCancelInteraction.SafeInvoke(command, invalidArgs, interaction);
         }
 
-        public void CommandBlocked(Command command, DiscordInteraction interaction, string reason, Permissions missingUserPermissions, Permissions missingClientPermissions, uint seconds)
+        public void CommandBlocked(Command command, DiscordInteraction interaction, string reason, Permissions missingUserPermissions = Permissions.None, Permissions missingClientPermissions = Permissions.None, uint seconds = 0U)
         {
             CommandBlockInteraction.SafeInvoke(command, interaction, reason, missingUserPermissions,
                 missingClientPermissions, seconds);

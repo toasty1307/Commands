@@ -47,9 +47,9 @@ namespace Commands.Commands.Utils
             var command = ctx.GetArg<Command>("CommandOrGroup", out var isCommand);
             var group = ctx.GetArg<Group>("CommandOrGroup", out _);
             var showAll = command is null && group is null;
-            if (showAll) await ctx.FollowUpAsync(ProcessAllCommands(ctx.Guild, ctx.Author, ctx.Interaction.Id, DateTimeOffset.Now));
-            else if (isCommand) await ctx.FollowUpAsync(ProcessCommand(ctx.Guild, ctx.Author, command));
-            else await ctx.FollowUpAsync(GetGroupEmbed(group, ctx.Guild, ctx.Author));
+            if (showAll) await ctx.ReplyAsync(ProcessAllCommands(ctx.Guild, ctx.Author, ctx.Interaction.Id, DateTimeOffset.Now));
+            else if (isCommand) await ctx.ReplyAsync(ProcessCommand(ctx.Guild, ctx.Author, command));
+            else await ctx.ReplyAsync(GetGroupEmbed(group, ctx.Guild, ctx.Author));
         }
 
         private DiscordEmbedBuilder ProcessCommand(DiscordGuild guild, DiscordUser user, Command command)
@@ -110,7 +110,7 @@ namespace Commands.Commands.Utils
             var completePrefixString = privateChannel
                 ? $"`{mentionPrefix} command`"
                 : $"`{mentionPrefix} command` or `{prefix} command`";
-            var description = $"To run a command in {(privateChannel ? "any server" : guild.Name)}, use {completePrefixString}. For example, {completePrefixString.Replace("command", "prefix")}\nTo run a command in DMs simply use `command` with no prefix\n\n Use `help <command>` to view detailed information about a specific command.\nUse `help all` to view a list of all commands, not just available ones\n\n\n__**Available Commands in {(privateChannel ? "this DM" : guild.Name)}**__";
+            var description = $"To run a command in {(privateChannel ? "any server" : guild.Name)}, use {completePrefixString}. For example, {completePrefixString.Replace("command", "prefix")}\nTo run a command in DMs simply use `command` with no prefix\n\n Use `help <command>` to view detailed information about a specific command.\n\n\n__**Available Commands in {(privateChannel ? "this DM" : guild.Name)}**__";
             
             var embed = new DiscordEmbedBuilder
             {

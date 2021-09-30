@@ -19,7 +19,7 @@ namespace CommandsTest.Commands.Admin
 
         public override async Task Run(InteractionContext ctx)
         {
-            await ctx.FollowUpAsync("cya");
+            await ctx.ReplyAsync("cya");
             Environment.Exit(0);
         }
 

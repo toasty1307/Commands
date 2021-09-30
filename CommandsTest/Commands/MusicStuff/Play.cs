@@ -46,7 +46,7 @@ namespace CommandsTest.Commands.MusicStuff
             var track = trackLoad.Tracks.First();
             await Connect.LavaLinkVoice.PlayAsync(track);
 
-            await ctx.FollowUpAsync(
+            await ctx.ReplyAsync(
                 $"Now playing: {Formatter.Bold(Formatter.Sanitize(track.Title))} by {Formatter.Bold(Formatter.Sanitize(track.Author))}.");
         }
 
@@ -71,7 +71,7 @@ namespace CommandsTest.Commands.MusicStuff
         {
             if (Connect.LavaLinkVoice is null) return;
             await Connect.LavaLinkVoice.PauseAsync();
-            await ctx.FollowUpAsync("ok");
+            await ctx.ReplyAsync("ok");
         }
 
         public Pause(DiscordClient client) : base(client)
@@ -95,7 +95,7 @@ namespace CommandsTest.Commands.MusicStuff
         {
             if (Connect.LavaLinkVoice is null) return;
             await Connect.LavaLinkVoice.ResumeAsync();
-            await ctx.FollowUpAsync("ok");
+            await ctx.ReplyAsync("ok");
         }
 
         public Resume(DiscordClient client) : base(client)
@@ -119,7 +119,7 @@ namespace CommandsTest.Commands.MusicStuff
         {
             if (Connect.LavaLinkVoice is null) return;
             await Connect.LavaLinkVoice.StopAsync();
-            await ctx.FollowUpAsync("ok");
+            await ctx.ReplyAsync("ok");
         }
 
         public Stop(DiscordClient client) : base(client)

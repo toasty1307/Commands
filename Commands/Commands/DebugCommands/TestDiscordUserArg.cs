@@ -29,7 +29,7 @@ namespace Commands.Commands.DebugCommands
         public override async Task Run(InteractionContext ctx)
         {
             var user = ctx.GetArg<DiscordUser>("User");
-            await ctx.FollowUpAsync(user?.Id.ToString() ?? "null");
+            await ctx.ReplyAsync(user?.Id.ToString() ?? "null");
         }
 
         public TestDiscordUserArg(DiscordClient client) : base(client)

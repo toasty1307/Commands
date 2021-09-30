@@ -54,7 +54,7 @@ namespace CommandsTest.Commands.MusicStuff
             var lava = ctx.Client.GetLavalink();
             if (lava is null)
             {
-                await ctx.FollowUpAsync("LavaLink not enabled");
+                await ctx.ReplyAsync("LavaLink not enabled");
                 return;
             }
 
@@ -66,7 +66,7 @@ namespace CommandsTest.Commands.MusicStuff
             });
             
             LavaLink.Disconnected += LavaLinkDisconnected;
-            await ctx.FollowUpAsync("yes");
+            await ctx.ReplyAsync("yes");
         }
 
         public Connect(DiscordClient client) : base(client)
@@ -104,12 +104,12 @@ namespace CommandsTest.Commands.MusicStuff
             var lava = ctx.Client.GetLavalink();
             if (lava is null)
             {
-                await ctx.FollowUpAsync("no what you trying to do bruh");
+                await ctx.ReplyAsync("no what you trying to do bruh");
                 return;
             }
             await Connect.LavaLink.StopAsync();
             Connect.LavaLink = null;
-            await ctx.FollowUpAsync("disconnected ");
+            await ctx.ReplyAsync("disconnected ");
         }
 
         public Disconnect(DiscordClient client) : base(client)

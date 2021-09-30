@@ -16,7 +16,7 @@ namespace CommandsTest.Commands.Misc
 
         public override async Task Run(InteractionContext ctx)
         {
-            await ctx.FollowUpAsync(
+            await ctx.ReplyAsync(
                 "https://discord.com/api/oauth2/authorize?client_id=874898292771807282&permissions=8&scope=bot%20applications.commands");
         }
     }

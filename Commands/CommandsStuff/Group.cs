@@ -12,7 +12,7 @@ namespace Commands.CommandsStuff
         public uint Id { get; set; }
         public List<Command> Commands { get; } = new();
 
-        public override string ToString() => Id.ToString();
+        public override string ToString() => Name;
         public static implicit operator Group(string s) => Groups.First(x => x.ToString() == s);
     }
 }

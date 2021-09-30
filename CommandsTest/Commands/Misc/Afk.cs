@@ -45,9 +45,9 @@ namespace CommandsTest.Commands.Misc
 
         public override async Task Run(InteractionContext ctx)
         {
-            await ctx.FollowUpAsync(ctx.GetArg<string>("SetOrClear") ?? "null");
-            await ctx.FollowUpAsync(ctx.GetArg<DiscordUser>("UserToClear")?.Username ?? "null");
-            await ctx.FollowUpAsync(ctx.GetArg<string>("Message") ?? "null");
+            await ctx.ReplyAsync(ctx.GetArg<string>("SetOrClear") ?? "null");
+            await ctx.ReplyAsync(ctx.GetArg<DiscordUser>("UserToClear")?.Username ?? "null");
+            await ctx.ReplyAsync(ctx.GetArg<string>("Message") ?? "null");
         }
     }
 }

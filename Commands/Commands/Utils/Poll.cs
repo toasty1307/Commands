@@ -312,7 +312,7 @@ namespace Commands.Commands.Utils
                 embed.AddField(choice, "0", true);
             }
 
-            await ctx.FollowUpAsync("Sent a new poll");
+            await ctx.ReplyAsync("Sent a new poll");
             await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().AddComponents(actionsRows).AddEmbed(embed));
         }
 

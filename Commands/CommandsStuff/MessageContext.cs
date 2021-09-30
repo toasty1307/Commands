@@ -46,10 +46,10 @@ namespace Commands.CommandsStuff
         public DiscordChannel Channel => Interaction.Channel;
         public DiscordUser Author => Interaction.User;
         public DiscordMember Member => Author as DiscordMember;
-        public Task FollowUpAsync(string content, bool ephemeral = true) => Interaction.FollowUpAsync(content, ephemeral);
-        public Task FollowUpAsync(string content, DiscordEmbed embed, bool ephemeral = true) => Interaction.FollowUpAsync(content, embed, ephemeral);
-        public Task FollowUpAsync(DiscordEmbed embed, bool ephemeral = true) => Interaction.FollowUpAsync(embed, ephemeral);
-        public Task FollowUpAsync(DiscordMessageBuilder builder, bool ephemeral = true) => Interaction.FollowUpAsync(builder, ephemeral);
+        public Task ReplyAsync(string content, bool ephemeral = true) => Interaction.FollowUpAsync(content, ephemeral);
+        public Task ReplyAsync(string content, DiscordEmbed embed, bool ephemeral = true) => Interaction.FollowUpAsync(content, embed, ephemeral);
+        public Task ReplyAsync(DiscordEmbed embed, bool ephemeral = true) => Interaction.FollowUpAsync(embed, ephemeral);
+        public Task ReplyAsync(DiscordMessageBuilder builder, bool ephemeral = true) => Interaction.FollowUpAsync(builder, ephemeral);
         public void Deconstruct(out ArgumentCollector collector, out DiscordClient client, out CommandsExtension extension, out DiscordInteraction interaction,
             out DiscordGuild guild, out DiscordChannel channel, out DiscordUser author, out DiscordMember member)
         {

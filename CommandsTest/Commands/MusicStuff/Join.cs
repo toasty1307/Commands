@@ -68,7 +68,7 @@ namespace CommandsTest.Commands.MusicStuff
         {
             if (Connect.LavaLink is null)
             {
-                await ctx.FollowUpAsync("not connected :|");
+                await ctx.ReplyAsync("not connected :|");
                 return;
             }
 
@@ -76,7 +76,7 @@ namespace CommandsTest.Commands.MusicStuff
                           ((DiscordMember) ctx.Author).VoiceState.Channel;
             if (channel is null)
             {
-                await ctx.FollowUpAsync("no");
+                await ctx.ReplyAsync("no");
                 return;
             }
 
@@ -86,8 +86,8 @@ namespace CommandsTest.Commands.MusicStuff
                 {
                     Connect.LavaLinkVoice = await Connect.LavaLink.ConnectAsync(channel);
                     Connect.LavaLinkVoice.PlaybackFinished += LavaLinkVoicePlaybackFinished;
-                    Connect.LavaLinkVoice.DiscordWebSocketClosed += (_, _) => ctx.FollowUpAsync("discord websocket closed ig");
-                    await ctx.FollowUpAsync("pog");
+                    Connect.LavaLinkVoice.DiscordWebSocketClosed += (_, _) => ctx.ReplyAsync("discord websocket closed ig");
+                    await ctx.ReplyAsync("pog");
                 });
             }
             catch (Exception e)
@@ -119,7 +119,7 @@ namespace CommandsTest.Commands.MusicStuff
             if (Connect.LavaLinkVoice is null) return;
             await Connect.LavaLinkVoice.DisconnectAsync();
             Connect.LavaLinkVoice = null;
-            await ctx.FollowUpAsync("ok");
+            await ctx.ReplyAsync("ok");
         }
 
         public Leave(DiscordClient client) : base(client)

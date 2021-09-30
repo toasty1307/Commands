@@ -31,7 +31,7 @@ namespace CommandsTest.Commands.Misc
 
         public override Task Run(InteractionContext ctx)
         {
-            return ctx.FollowUpAsync(new DiscordEmbedBuilder
+            return ctx.ReplyAsync(new DiscordEmbedBuilder
                 {
                     Title = $"Info about {ctx.Guild.Name}",
                     Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail

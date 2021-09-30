@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Commands;
 using Commands.CommandsStuff;
 using Commands.Utils;
+using CommandsTest.Modules;
+using CommandsTest.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
@@ -16,10 +18,8 @@ namespace CommandsTest
     public class CommandsTestBot
     {
         private DiscordClient Client { get; }
-        /*
-        private DiscordClient Client2 { get; }
-        */
-
+        private BlacklistModule BlacklistModule { get; }
+        
         public CommandsTestBot()
         {
             var config = GetConfig("Config.json");
@@ -55,55 +55,22 @@ namespace CommandsTest
                 {
                     Name = "MusicStuff",
                     Description = "the title says it all"
+                },
+                new()
+                {
+                    Name = "Moderation",
+                    Description = "for people who like milk"
                 }
             });
             commandsExtension.Registry.RegisterCommands(GetType().Assembly);
             Client.GuildMemberAdded += (_, args) => CheckForBadNick(args.Member, args.Member.Nickname ?? args.Member.Username);
             Client.GuildMemberUpdated += (_, args) => CheckForBadNick(args.Member, args.NicknameAfter);
             Client.UseLavalink();
-            
-            
-            /*
-            var config2 = GetConfig("Config.json");
-            var discordConfiguration2 = new DiscordConfiguration
-            {
-                Token = "ODgzNzQ0NzU1MjYyMDUwMzg1.YTOZcA.KRtZ_csJOK4DUQDVfZvK_VEiJ7I",
-                LoggerFactory = new LoggerFactory(),
-                Intents = DiscordIntents.All,
-                MinimumLogLevel = LogLevel.Trace
-            };
-            var commandsConfig2 = new CommandsConfig
-            {
-                Prefix = config2.Prefix,
-                Owners = new ulong[]{ 742976057761726514 },
-                Invite = "discord.gg/TCf7QexN5e"
-            };
-            Client2 = new DiscordClient(discordConfiguration2);
-            var commandsExtension2 = Client2.UseCommands(new CommandsExtension(commandsConfig2));
-            commandsExtension2.Registry.RegisterDefaults();
-            commandsExtension2.Registry.RegisterGroups(new Group[]
-            {
-                new()
-                {
-                    Name = "Misc",
-                    Description = "misc stuff, nothing much"
-                },
-                new()
-                {
-                    Name = "Admin",
-                    Description = "Owner only commands idk"
-                },
-                new()
-                {
-                    Name = "MusicStuff",
-                    Description = "the title says it all"
-                }
-            });
-            commandsExtension2.Registry.RegisterCommands(GetType().Assembly);
-            Client2.GuildMemberAdded += CheckForBadNick;
-            Client2.GuildMemberUpdated += CheckForBadNick;
-            Client2.UseLavalink();
-        */
+            Client.Logger.LogInformation("Initializing blacklist module");
+            BlacklistModule = Client.AddBlacklistModule();
+            Client.Logger.LogInformation("Initialized blacklist module");
+            commandsExtension.Dispatcher.AddInhibitor((DiscordMessage message, Command t2) => BlacklistModule.Check(message, t2));
+            commandsExtension.Dispatcher.AddInhibitor((DiscordInteraction interaction, Command t2) => BlacklistModule.Check(interaction, t2));
         }
 
         private async Task CheckForBadNick(DiscordMember member, string nick)
@@ -123,9 +90,6 @@ namespace CommandsTest
         public async Task Run()
         {
             await Client.ConnectAsync(new DiscordActivity{ActivityType = ActivityType.Playing, Name = "Milk"}, UserStatus.Idle, DateTimeOffset.Now);
-            /*
-            await Client2.ConnectAsync(new DiscordActivity{ActivityType = ActivityType.Playing, Name = "Milk"}, UserStatus.Idle, DateTimeOffset.Now);
-            */
         }
 
         public Config GetConfig(string fileName)

@@ -27,7 +27,7 @@ namespace Commands.Commands.Utils
 
         public override async Task Run(InteractionContext ctx)
         {
-            await ctx.FollowUpAsync($"The bot's ping is {ctx.Client.Ping}ms");
+            await ctx.ReplyAsync($"The bot's ping is {ctx.Client.Ping}ms");
         }
     }
 }

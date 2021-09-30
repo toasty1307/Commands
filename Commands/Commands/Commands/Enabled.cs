@@ -77,7 +77,7 @@ namespace Commands.Commands.Commands
 
             if (provider is null)
             {
-                await ctx.FollowUpAsync("No Provider is registered!");
+                await ctx.ReplyAsync("No Provider is registered!");
                 return;
             }
 
@@ -85,30 +85,30 @@ namespace Commands.Commands.Commands
             {
                 var enabled = provider.Get(ctx.Guild).Groups[group];
                 if (enable is null)
-                    await ctx.FollowUpAsync(
+                    await ctx.ReplyAsync(
                         $"The Group {@group.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
                 else if (!@group.Guarded)
                 {
                     ctx.Extension.GroupStatusChanged(ctx.Guild, @group, (bool) enable);
-                    await ctx.FollowUpAsync($"Group {@group.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
+                    await ctx.ReplyAsync($"Group {@group.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
                 }
                 else
-                    await ctx.FollowUpAsync($"Group {@group.Name} is guarded :|");
+                    await ctx.ReplyAsync($"Group {@group.Name} is guarded :|");
             }
             else
             {
                 var command = ctx.GetArg<Command>("CommandOrGroup");
                 var enabled = provider.Get(ctx.Guild).Commands[command];
                 if (enable is null)
-                    await ctx.FollowUpAsync(
+                    await ctx.ReplyAsync(
                         $"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
                 else if (!(command.Guarded || command.Group.Guarded))
                 {
                     ctx.Extension.CommandStatusChanged(ctx.Guild, command, (bool) enable);
-                    await ctx.FollowUpAsync($"Command {command.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
+                    await ctx.ReplyAsync($"Command {command.Name} was {((bool) enable ? "Enabled" : "Disabled")}");
                 }
                 else
-                    await ctx.FollowUpAsync($"Command {command.Name} is guarded :|");
+                    await ctx.ReplyAsync($"Command {command.Name} is guarded :|");
             }
         }
 

@@ -63,19 +63,19 @@ namespace Commands.Commands.Utils
                         var settings = provider.Get(ctx.Guild);
                         settings.Prefix = prefix;
                         ctx.Extension.CommandPrefixChanged(ctx.Guild, prefix);
-                        await ctx.FollowUpAsync($"Set the command prefix to {prefix}");
+                        await ctx.ReplyAsync($"Set the command prefix to {prefix}");
                     }
                     else
-                        await ctx.FollowUpAsync("Cant Set a prefix in DMs!");
+                        await ctx.ReplyAsync("Cant Set a prefix in DMs!");
                 }
                 else
-                    await ctx.FollowUpAsync("No Settings Provider is registered!");
+                    await ctx.ReplyAsync("No Settings Provider is registered!");
             }
             else if (provider is not null)
-                await ctx.FollowUpAsync(
+                await ctx.ReplyAsync(
                     $"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is `{(provider.Get(ctx.Guild))?.Prefix ?? ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`");
             else 
-                await ctx.FollowUpAsync($"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is `{ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`");
+                await ctx.ReplyAsync($"The prefix in {(ctx.Guild is null ? "DMs" : ctx.Guild.Name)} is `{ctx.Extension.CommandPrefix}` or `@{ctx.Client.CurrentUser.Username}#{ctx.Client.CurrentUser.Discriminator}`");
         }
 
         public Prefix(DiscordClient client) : base(client)

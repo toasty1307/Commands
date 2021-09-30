@@ -57,7 +57,7 @@ namespace Commands.CommandsStuff
         public abstract Task Run(InteractionContext ctx);
 
         public override string ToString() => $"{Group.Id}:{Name}";
-        public static implicit operator Command(string s) => Commands.First(x => $"{x.Group.Id}:{x.Name}" == s);
+        public static implicit operator Command(string s) => Commands.First(x => $"{x.Group.Id}:{x.Name}" == s || x.Name == s);
 
         public virtual async Task OnBlock(DiscordMessage message, string reason, Permissions missingUserPermissions = Permissions.None, Permissions missingClientPermissions = Permissions.None, uint seconds = 0)
         {

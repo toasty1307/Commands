@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Commands;
 using Commands.CommandsStuff;
 using Commands.Utils;
+using CommandsTest.Commands.Misc;
 using CommandsTest.Modules;
 using CommandsTest.Utils;
 using DSharpPlus;
@@ -33,7 +34,7 @@ namespace CommandsTest
             var commandsConfig = new CommandsConfig
             {
                 Prefix = config.Prefix,
-                Owners = new ulong[]{ 742976057761726514 },
+                Owners = new ulong[]{ 742976057761726514, 519673297693048832 },
                 Invite = "discord.gg/TCf7QexN5e"
             };
             Client = new DiscordClient(discordConfiguration);
@@ -65,12 +66,18 @@ namespace CommandsTest
             commandsExtension.Registry.RegisterCommands(GetType().Assembly);
             Client.GuildMemberAdded += (_, args) => CheckForBadNick(args.Member, args.Member.Nickname ?? args.Member.Username);
             Client.GuildMemberUpdated += (_, args) => CheckForBadNick(args.Member, args.NicknameAfter);
+            Client.GuildDownloadCompleted += (client, _) =>
+            {
+                client.Logger.LogInformation($"Client ready, logged in as ({client.CurrentUser.Username}#{client.CurrentUser.Discriminator}), you can run your command now senpai");
+                return Task.CompletedTask;
+            };
             Client.UseLavalink();
             Client.Logger.LogInformation("Initializing blacklist module");
             BlacklistModule = Client.AddBlacklistModule();
             Client.Logger.LogInformation("Initialized blacklist module");
             commandsExtension.Dispatcher.AddInhibitor((DiscordMessage message, Command t2) => BlacklistModule.Check(message, t2));
             commandsExtension.Dispatcher.AddInhibitor((DiscordInteraction interaction, Command t2) => BlacklistModule.Check(interaction, t2));
+            Tag.RegisterTags(GetType().Assembly);
         }
 
         private async Task CheckForBadNick(DiscordMember member, string nick)

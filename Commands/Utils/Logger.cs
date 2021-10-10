@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace Commands.Utils
@@ -31,8 +32,16 @@ namespace Commands.Utils
 
             if (_theme.EventId != 0 && _theme.EventId != eventId.Id) return;
             var originalColor = Console.ForegroundColor;
+            var stackTrace = new StackTrace();
+            var frame = stackTrace.GetFrames()[5];
+            var method = frame.GetMethod();
+            var fullName = method!.DeclaringType!.FullName;
+            var source = fullName!.Contains('+') ? fullName![fullName.LastIndexOf(".", StringComparison.Ordinal)..fullName.IndexOf("+", StringComparison.Ordinal)] : method.DeclaringType.Name;
+            var methodName = method.Name == "MoveNext" ? method.DeclaringType.Name[2..^1] : method.Name;
+            methodName = methodName == ".ctor" ? fullName + "_ctor" : methodName;
+            methodName = methodName.Contains('>') ? "(some local method somewhere idk)" : methodName; 
             Console.ForegroundColor = _theme.LogLevels[logLevel];
-            Console.WriteLine($"[{eventId.Id} : {logLevel} : {DateTime.Now:hh:mm:ss} : {_name}] {formatter(state, exception)}");
+            Console.WriteLine($"[{string.Join(" : ", _name, eventId.Id, string.IsNullOrEmpty(eventId.Name) ? methodName : eventId.Name, logLevel, DateTime.Now.ToString("hh:mm:ss t z"))}] {(string.IsNullOrEmpty(source) ? "" : $"[{source.Replace(".", "")}] ")}{formatter(state, exception)}");
             Console.ForegroundColor = originalColor;
         }
     }
@@ -50,7 +59,7 @@ namespace Commands.Utils
     {
         public int EventId { get; set; }
         
-        public Dictionary<LogLevel, ConsoleColor> LogLevels { get; set; } = new()
+        public Dictionary<LogLevel, ConsoleColor> LogLevels { get; } = new()
         {
             [LogLevel.Information] = ConsoleColor.Green,
             [LogLevel.Critical] = ConsoleColor.DarkRed,

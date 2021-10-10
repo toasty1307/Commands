@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Commands;
 using Commands.CommandsStuff;
@@ -13,17 +12,18 @@ namespace CommandsTest.Modules
     {
         private List<GuildEntity> Cache { get; set; }
 
-        public BlacklistModule()
+        public BlacklistModule() => UpdateCache();
+ 
+        private bool CanUserUse(DiscordUser user, DiscordGuild guild, Command command)
         {
-            UpdateCache();
+            var guildEntity = Cache.FirstOrDefault(x => x.GuildId == guild.Id);
+            var blacklist = guildEntity?.Blacklist.FirstOrDefault(x => x.Id == user.Id);
+            if (blacklist is null || !blacklist.Commands.Any() || !blacklist.Groups.Any()) return true;
+            var commandEntity = blacklist.Commands.FirstOrDefault(x => x.Name == command.Name);
+            if (commandEntity is not default(CommandEntity)) return false;
+            var group = blacklist.Groups.FirstOrDefault(x => x.Name == command.Group.Name);
+            return group is default(GroupEntity);
         }
-
-        public bool CanUserUse(DiscordUser user, DiscordGuild guild, Command command) =>
-            !(Cache.Exists(x => x.GuildId == guild.Id) && 
-            Cache.First(x => x.GuildId == guild.Id).Blacklist.Any(
-                x => x.Id == user.Id && 
-                (x.Commands.Select(cmd => (Command) cmd).Contains(command) ||
-                x.Groups.Select(grp => (Group) grp).Contains(command.Group))));
 
         public BlacklistResult BlacklistUser(DiscordUser user, DiscordGuild guild, Command command)
         {
@@ -153,11 +153,13 @@ namespace CommandsTest.Modules
 
         public Inhibition Check(DiscordInteraction interaction, Command command)
         {
-            return CanUserUse(interaction.User, interaction.Channel.Guild, command) ? new Inhibition
-            {
-                Reason = "BLACKLIST",
-                Response = "blacklist moment"
-            } : default;
+            return CanUserUse(interaction.User, interaction.Channel.Guild, command)
+                ? default
+                : new Inhibition
+                {
+                    Reason = "BLACKLIST",
+                    Response = "blacklist moment"
+                };
         }
         
         public Inhibition Check(DiscordMessage message, Command command)

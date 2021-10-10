@@ -154,6 +154,7 @@ namespace Commands.Commands.Utils
             };
             var actionsRowsRequired = choices.Count % 5 == 0 ? choices.Count / 5 : choices.Count / 5 + 1;
             var actionsRows = new List<DiscordActionRowComponent>();
+            
             for (var i = 0; i < actionsRowsRequired; i++)
             {
                 var numberOfButtonsInThisRow = i == actionsRowsRequired - 1 ? choices.Count - i * 5 : 5;

@@ -55,7 +55,7 @@ namespace Commands
             var canRegister = CanRegister(command);
             if (canRegister is not null)
             {
-                Client.Logger.LogError($"Error registering command: {canRegister}");
+                Logger.LogError($"Error registering command: {canRegister}");
                 Environment.Exit(1);
             }
             var group = Groups.First(x => string.Equals(x.Name, command.GroupName, StringComparison.CurrentCultureIgnoreCase));
@@ -65,7 +65,7 @@ namespace Commands
             Commands.Add(command);
             Extension.CommandRegistered(command);
             Command.Commands.Add(command);
-            Client.Logger.LogInformation($"Registered Command {command.Name}");
+            Logger.LogInformation($"Registered Command {command.Name}");
         }
 
         public ApplicationCommandOptionType GetApplicationCommandOptionTypeFromArgumentType(ArgumentType type)
@@ -185,12 +185,12 @@ namespace Commands
             var canRegister = CanRegister(type);
             if (canRegister is not null)
             {
-                Client.Logger.LogError($"Error registering Argument Type: {canRegister}");
+                Logger.LogError($"Error registering Argument Type: {canRegister}");
                 Environment.Exit(1);
             }
 
             Extension.TypeRegistered(type);
-            Client.Logger.LogInformation($"Registered Argument type {type}");
+            Logger.LogInformation($"Registered Argument type {type}");
             ArgumentTypes.Add(type);
         }
 
@@ -206,7 +206,7 @@ namespace Commands
             var canRegister = CanRegister(group);
             if (canRegister is not null)
             {
-                Client.Logger.LogError($"Error registering group: {canRegister}");
+                Logger.LogError($"Error registering group: {canRegister}");
                 Environment.Exit(1);
             }
 
@@ -216,7 +216,7 @@ namespace Commands
                 group.Id = 0;
             Extension.GroupRegistered(group);
             Group.Groups.Add(group);
-            Client.Logger.LogInformation($"Registered group {group.Name}");
+            Logger.LogInformation($"Registered group {group.Name}");
             Groups.Add(group);
         }
 

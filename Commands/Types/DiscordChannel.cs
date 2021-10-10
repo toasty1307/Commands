@@ -12,7 +12,7 @@ namespace Commands.Types
         public Regex ChannelRegex = new(@"\d+");
         public override bool Validate(string argString)
         {
-            var match = ChannelRegex.Match(argString);
+            var match = ChannelRegex.Match(argString ?? "0");
             DiscordChannel channel;
             try
             {

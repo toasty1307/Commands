@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
+using Commands.Types;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
@@ -19,7 +20,7 @@ namespace CommandsTest.Commands.Misc
             {
                 Key = "Channel",
                 Optional = true,
-                Types = new []{typeof(DiscordChannel)}
+                Types = new []{typeof(DiscordTextChannelArgumentType)}
             },
             new()
             {

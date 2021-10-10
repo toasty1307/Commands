@@ -12,17 +12,13 @@ namespace Commands.CommandsStuff
             set { if (Args.ContainsKey(key)) Args[key] = value; else Args.Add(key, value); }
         }
 
-        public T Get<T>(string key)  => (T)this[key];
-        public T Get<T>(string key, out bool yes)
-        {
-            if (this[key] is T)
-            {
-                yes = true;
-                return (T) this[key];
-            }
+        public T Get<T>(string key) => this[key] is T t ? t : default;
 
-            yes = false;
-            return default;
+        public bool Get<T>(string key, out T t)
+        {
+            var flag = this[key] is T;
+            t = this[key] is T t1 ? t1 : default;
+            return flag;
         }
     }
 }

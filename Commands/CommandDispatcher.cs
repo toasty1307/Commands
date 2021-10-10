@@ -5,13 +5,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using Commands.Data;
-using Commands.Types;
 using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
-using Group = Commands.CommandsStuff.Group;
 
 namespace Commands
 {
@@ -19,9 +17,10 @@ namespace Commands
     {
         #region Fields
         
-        private readonly Regex _splitWordsRegex = new("(?<=\')[^\']*(?=\')|[^\' ]+");
+        private readonly Regex _splitWordsRegex = new("(?<=\")[^\"]*(?=\")|[^\" ]+");
         
         public CommandRegistry Registry { get; }
+        public ArgumentParser ArgumentParser { get; }
         
         public List<Inhibitor<DiscordMessage, Command>> MessageInhibitors { get; set; } = new();
         
@@ -35,6 +34,7 @@ namespace Commands
         public CommandDispatcher(DiscordClient client, CommandRegistry registry) : base(client)
         {
             Registry = registry;
+            ArgumentParser = new ArgumentParser(client, Registry);
         }
         #endregion
 
@@ -62,7 +62,7 @@ namespace Commands
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e); throw;
+                Logger.Error(e); throw;
             }
         }
         
@@ -71,13 +71,19 @@ namespace Commands
             var settings = Extension.Provider.Get(guild);
             if (settings is null)
             {
-                Extension.Provider.Set(guild, new GuildSettings
+                Extension.Provider.Update(guild, new GuildEntity
                 {
                     Prefix = Extension.CommandPrefix,
-                    Commands = new Dictionary<Command, bool>(Extension.Registry.Commands.Select(x => new KeyValuePair<Command, bool>(x, true))),
-                    Groups = new Dictionary<Group, bool>(Extension.Registry.Groups.Select(x => new KeyValuePair<Group, bool>(x, true))),
+                    Commands = new Dictionary<DisabledCommandEntity, bool>(Extension.Registry.Commands.
+                        Select(x => 
+                            new KeyValuePair<DisabledCommandEntity, bool>(
+                                new DisabledCommandEntity{Name = x.Name, GuildId = guild.Id}, true))),
+                    Groups = new Dictionary<DisabledGroupEntity, bool>(Extension.Registry.Groups.
+                        Select(x => 
+                            new KeyValuePair<DisabledGroupEntity, bool>(
+                                new DisabledGroupEntity{Name = x.Name, GuildId = guild.Id}, true))),
                     Id = guild?.Id ?? 0
-                }, true);
+                });
             }
         }
         
@@ -135,11 +141,11 @@ namespace Commands
                     return;
                 }
 
-                await RunCommand(commands[0], message, words);
+                await RunCommand(commands[0], message, SplitWords(string.Join(' ', words)));
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e);
+                Logger.Error(e);
             }
         }
         
@@ -151,7 +157,7 @@ namespace Commands
                 if (interaction.Type is not InteractionType.ApplicationCommand) return;
                 await interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder{IsEphemeral = true});
                 var command = interaction.Data.Name;
-                Client.Logger.LogInformation($"Received Interaction For Slash Command {command}");
+                Logger.LogInformation($"Received Interaction For Slash Command {command}");
 
                 MakeSureDataBaseThingExists(interaction.Channel.Guild);
 
@@ -163,16 +169,16 @@ namespace Commands
                 
                 try
                 {
-                    await RunCommand(commands[0], interaction, argsList.ToArray());
+                    await RunCommand(commands[0], interaction, SplitWords(string.Join(' ', argsList)));
                 }
                 catch (Exception e)
                 {
-                    Client.Logger.Error(e);
+                    Logger.Error(e);
                 }
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e);    
+                Logger.Error(e);    
                 throw;
             }
         }
@@ -203,13 +209,13 @@ namespace Commands
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e);
+                Logger.Error(e);
             }
         }
 
         public async Task Handle(DiscordClient _, ComponentInteractionCreateEventArgs interaction)
         {
-            await interaction.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder{IsEphemeral = true});
+            await interaction.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
             if (ComponentActions.ContainsKey(interaction.Id))
                 ComponentActions[interaction.Id].Invoke(interaction);
         }
@@ -242,239 +248,16 @@ namespace Commands
                     return;
                 }
 
-                await RunCommand(commands[0], message, words);
+                await RunCommand(commands[0], message, SplitWords(string.Join(' ', words)));
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e);
+                Logger.Error(e);
             }
         }
 
         #endregion
-
-        #region ArgStuff
-
-        public ArgumentCollector FigureOutCommandArgsIdk(string commandString, Command command, DiscordMessage message)
-        {
-            if (command.Arguments is null || command.Arguments.Length == 0) return new ArgumentCollector();
-            var collector = new ArgumentCollector();
-            var words = SplitWords(commandString);
-            var inputArgs = words[1..];
-            var commandArgs = command.Arguments;
-            var notOptionalArgs = commandArgs.Where(x => !x.Optional).ToArray();
-            var invalidNumberOfArgs = notOptionalArgs.Length > inputArgs.Length;
-            if (inputArgs.Length == 0 && notOptionalArgs.Length == 0 && !commandArgs.Any(x => x.Default is not null)) return collector;
-            if (invalidNumberOfArgs) throw new FriendlyException("Invalid number of arguments");
-
-            foreach (var commandArg in commandArgs)
-            {
-                var argString = string.Empty;
-                try { argString = commandArg.Infinite ? string.Join(" ", inputArgs[commandArgs.ToList().IndexOf(commandArg)..]) : inputArgs[commandArgs.ToList().IndexOf(commandArg)]; }
-                catch { if (commandArg.Optional && commandArg.Default is null) continue; }
-
-                if (commandArg.Types is null || commandArg.Types.Length == 0) commandArg.Types = new[] {typeof(string)};
-                if (commandArg.OneOf is not null && !commandArg.OneOf.Select(x => x.ToLower()).Contains(argString))
-                {
-                    if (commandArg.Optional)
-                    {
-                        var temp = inputArgs.ToList();
-                        if (temp.Count != 0)
-                            temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1, string.IsNullOrEmpty(argString) ? "_" : argString);
-                        if (commandArg.Default is not null)
-                        {
-                            var argumentTypeObject = Registry.GetArgumentTypeFromReturnType(commandArg.Types[0]);
-                            var argumentTypeObjectType = argumentTypeObject.GetType();
-                            var parseMethod0 = argumentTypeObjectType.GetMethod("Parse");
-                            var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
-                            collector[commandArg.Key] = parseResult0;
-                        }
-                        inputArgs = temp.ToArray();
-                        continue;
-                    }
-                    throw new FriendlyException($"Argument {commandArg.Key} should be one of `{string.Join(", ", commandArg.OneOf)}`");
-                }
-                foreach (var commandArgType in commandArg.Types)
-                {
-                    var argumentTypeObject = Registry.GetArgumentTypeFromReturnType(commandArgType);
-                    var argumentTypeObjectType = argumentTypeObject.GetType();
-                    var validateMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType.Validate));
-                    var validateResult = (bool) validateMethod!.Invoke(argumentTypeObject, new object[] {argString})!;
-                    if (!validateResult)
-                    {
-                        if (!commandArg.Optional && commandArgType == commandArg.Types[^1])
-                        {
-                            Extension.CommandCanceled(command, "INVALID_ARGS", message);
-                            throw new FriendlyException($"Invalid Value (`{argString}`) for {commandArg.Key}");
-                        }
-                        if (commandArgType != commandArg.Types[^1])
-                            continue;
-                        var temp = inputArgs.ToList();
-                        try
-                        {
-                            temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1,
-                                inputArgs[commandArgs.ToList().IndexOf(commandArg)]);
-                        }
-                        catch { /* TODO idk */ }
-
-                        if (commandArg.Default is not null)
-                        {
-                            var parseMethod0 = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.Parse));
-                            var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
-                            collector[commandArg.Key] = parseResult0;
-                            break;
-                        }
-                        inputArgs = temp.ToArray();
-                        break;
-                    }
-
-                    var parseMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.Parse));
-                    var parseResult = parseMethod!.Invoke(argumentTypeObject, new object[] {argString});
-                    var isEmptyMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.IsEmpty));
-                    var isEmptyResult = isEmptyMethod.Invoke(argumentTypeObject, new[] {parseResult});
-                    // TODO prompt that arg is empty?
-                    var argIsEmpty = (bool) isEmptyResult!;
-                    if (argIsEmpty && commandArg.Default is not null)
-                    {
-                        var anotherParse = parseMethod.Invoke(argumentTypeObject, new object[] {commandArg.Default});
-                        var anotherIsEmpty = isEmptyMethod.Invoke(argumentTypeObject, new[] {anotherParse});
-                        var anotherArgIsEmpty = (bool) anotherIsEmpty!;
-                        if (anotherArgIsEmpty)
-                        {
-                            collector[commandArg.Key] = null;
-                            throw new FriendlyException("that arg was empty lol <:whynoOOOOOooooooOOO:889008360278605854>");
-                        }
-
-                        collector[commandArg.Key] = anotherParse;
-                    }
-                    else
-                        collector[commandArg.Key] = parseResult;
-                    break;
-                }
-                if (commandArg.Infinite) break;
-            }
-
-            return collector;
-        }
-
-        public ArgumentCollector FigureOutCommandArgsIdk(string[] strings, Command command, DiscordInteraction interaction)
-        {
-            if (command.Arguments is null || command.Arguments.Length == 0) return new ArgumentCollector();
-            var collector = new ArgumentCollector();
-            var words = strings;
-            var inputArgs = words[..];
-            var commandArgs = command.Arguments;
-            var notOptionalArgs = commandArgs.Where(x => !x.Optional).ToList();
-            var invalidNumberOfArgs = notOptionalArgs.Count > inputArgs.Length;
-            if (inputArgs.Length == 0 && notOptionalArgs.Count == 0) return collector;
-            if (invalidNumberOfArgs) throw new FriendlyException("Invalid number of arguments");
-            var optionalArgs = commandArgs.Where(x => x.Optional).ToList();
-            var slashCommandArgs = inputArgs.ToList();
-            var repeatCount = (notOptionalArgs.Count + optionalArgs.Count) - slashCommandArgs.Count;
-            if (repeatCount > 0)
-                slashCommandArgs.AddRange(Enumerable.Repeat<string>(null, (notOptionalArgs.Count + optionalArgs.Count) - slashCommandArgs.Count));
-            for (var i = 0; i < command.Arguments.Length; i++)
-            {
-                var optional = command.Arguments[i].Optional;
-                if (!optional) continue;
-                var indexInOptionalArgs = optionalArgs.IndexOf(commandArgs[i]);
-                var argsAtThatPos = slashCommandArgs[^(optionalArgs.Count - indexInOptionalArgs)];
-                slashCommandArgs.Remove(argsAtThatPos);
-                slashCommandArgs.Insert(i, argsAtThatPos);
-            }
-
-            inputArgs = slashCommandArgs.ToArray();
-            foreach (var commandArg in commandArgs)
-            {
-                var argString = string.Empty;
-                try { argString = commandArg.Infinite ? string.Join(" ", inputArgs[commandArgs.ToList().IndexOf(commandArg)..]) : inputArgs[commandArgs.ToList().IndexOf(commandArg)]; }
-                catch { if (commandArg.Optional && commandArg.Default is null) continue; }
-
-                if (commandArg.Types is null || commandArg.Types.Length == 0) commandArg.Types = new[] {typeof(string)};
-                if (commandArg.OneOf is not null && !commandArg.OneOf.Select(x => x.ToLower()).Contains(argString))
-                {
-                    if (commandArg.Optional)
-                    {
-                        var temp = inputArgs.ToList();
-                        if (temp.Count != 0)
-                            temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1, string.IsNullOrEmpty(argString) ? "_" : argString);
-                        if (commandArg.Default is not null)
-                        {
-                            var argumentTypeObject = Registry.GetArgumentTypeFromReturnType(commandArg.Types[0]);
-                            var argumentTypeObjectType = argumentTypeObject.GetType();
-                            var parseMethod0 = argumentTypeObjectType.GetMethod("Parse");
-                            var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
-                            collector[commandArg.Key] = parseResult0;
-                        }
-                        inputArgs = temp.ToArray();
-                        continue;
-                    }
-                    throw new FriendlyException($"Argument {commandArg.Key} should be one of `{string.Join(", ", commandArg.OneOf)}`");
-                }
-                foreach (var commandArgType in commandArg.Types)
-                {
-                    var argumentTypeObject = Registry.GetArgumentTypeFromReturnType(commandArgType);
-                    var argumentTypeObjectType = argumentTypeObject.GetType();
-                    var validateMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType.Validate));
-                    var validateResult = (bool) validateMethod!.Invoke(argumentTypeObject, new object[] {argString})!;
-                    if (!validateResult)
-                    {
-                        if (!commandArg.Optional && commandArgType == commandArg.Types[^1])
-                        {
-                            Extension.CommandCanceled(command, "INVALID_ARGS", interaction);
-                            throw new FriendlyException($"Invalid Value (`{argString}`) for {commandArg.Key}");
-                        }
-                        if (commandArgType != commandArg.Types[^1])
-                            continue;
-                        var temp = inputArgs.ToList();
-                        try
-                        {
-                            temp.Insert(commandArgs.ToList().IndexOf(commandArg) + 1,
-                                inputArgs[commandArgs.ToList().IndexOf(commandArg)]);
-                        }
-                        catch { /* TODO idk */ }
-
-                        if (commandArg.Default is not null)
-                        {
-                            var parseMethod0 = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.Parse));
-                            var parseResult0 = parseMethod0!.Invoke(argumentTypeObject, new object[] {commandArg.Default});
-                            collector[commandArg.Key] = parseResult0;
-                            break;
-                        }
-                        inputArgs = temp.ToArray();
-                        break;
-                    }
-
-                    var parseMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.Parse));
-                    var parseResult = parseMethod!.Invoke(argumentTypeObject, new object[] {argString});
-                    var isEmptyMethod = argumentTypeObjectType.GetMethod(nameof(ArgumentType<string>.IsEmpty));
-                    var isEmptyResult = isEmptyMethod.Invoke(argumentTypeObject, new[] {parseResult});
-                    // TODO prompt that arg is empty?
-                    var argIsEmpty = (bool) isEmptyResult!;
-                    if (argIsEmpty && commandArg.Default is not null)
-                    {
-                        var anotherParse = parseMethod.Invoke(argumentTypeObject, new object[] {commandArg.Default});
-                        var anotherIsEmpty = isEmptyMethod.Invoke(argumentTypeObject, new[] {anotherParse});
-                        var anotherArgIsEmpty = (bool) anotherIsEmpty!;
-                        if (anotherArgIsEmpty)
-                        {
-                            collector[commandArg.Key] = null;
-                            throw new FriendlyException("that arg was empty lol <:whynoOOOOOooooooOOO:889008360278605854>");
-                        }
-
-                        collector[commandArg.Key] = anotherParse;
-                    }
-                    else
-                        collector[commandArg.Key] = parseResult;
-                    break;
-                }
-                if (commandArg.Infinite) break;
-            }
-
-            return collector;
-        }
-
-        #endregion
-
+        
         #region RunCommand
 
         private async Task RunCommand(Command command, DiscordMessage message, string[] strings)
@@ -503,15 +286,13 @@ namespace Commands
                     var throttle = command.GetThrottle(message.Author);
                     var seconds = uint.MinValue;
                     if (throttle is not null)
-                    {
                         seconds = (uint) (command.ThrottlingOptions.Duration - (DateTime.Now.ConvertToUnixTimestamp() -
                                           throttle.Start.ConvertToUnixTimestamp()));
-                    }
                     Extension.CommandBlocked(command, message, reason, missingUserPerms, missingClientPerms, seconds);
                     await command.OnBlock(message, reason, missingUserPerms, missingClientPerms, seconds);
                     return;
                 }
-                var argumentCollector = FigureOutCommandArgsIdk(string.Join(" ", strings), command, message);
+                var argumentCollector = ArgumentParser.Parse(strings, command, message);
                 command.Throttle(message.Author);
                 await command.Run(new MessageContext
                 {
@@ -527,7 +308,7 @@ namespace Commands
                     await message.ReplyAsync(e.Message);
                     return;
                 }
-                Client.Logger.Error(e);
+                Logger.Error(e);
                 var embed = new DiscordEmbedBuilder
                 {
                     Title = "Error",
@@ -577,7 +358,7 @@ namespace Commands
                     await command.OnBlock(interaction, reason, missingUserPerms, missingClientPerms, seconds);
                     return;
                 }
-                var argumentCollector = FigureOutCommandArgsIdk(strings, command, interaction);
+                var argumentCollector = ArgumentParser.Parse(strings, command, interaction);
                 command.Throttle(interaction.User);
                 await command.Run(new InteractionContext
                 {
@@ -593,7 +374,7 @@ namespace Commands
                     await interaction.FollowUpAsync(e.Message);
                     return;
                 }
-                Client.Logger.Error(e);
+                Logger.Error(e);
                 var embed = new DiscordEmbedBuilder
                 {
                     Title = "Error",

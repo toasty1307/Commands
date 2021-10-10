@@ -10,7 +10,7 @@ namespace Commands.CommandsStuff
         public ArgumentCollector Collector { get; init; }
         public DiscordClient Client { get; init; }
         public CommandsExtension Extension => Client.GetCommandsExtension();
-        public T GetArg<T>(string key, out bool yes) => Collector.Get<T>(key, out yes);
+        public bool GetArg<T>(string key, out T t) => Collector.Get(key, out t);
         public T GetArg<T>(string key) => Collector.Get<T>(key);
     }
     public class MessageContext : CommandContext
@@ -21,12 +21,14 @@ namespace Commands.CommandsStuff
         public DiscordUser Author => Message.Author;
         public DiscordMember Member => Author as DiscordMember;
         public bool PrivateChannel => Guild is null;
+        public string RawCommandString => Message.Content;
+        public string RawArgString => string.Join(' ', Extension.Dispatcher.GetCommandString(Message)[1..]);
         public Task<DiscordMessage> ReplyAsync(string content) => Message.ReplyAsync(content);
         public Task<DiscordMessage> ReplyAsync(string content, DiscordEmbed embed) => Message.ReplyAsync(content, embed);
         public Task<DiscordMessage> ReplyAsync(DiscordEmbed embed) => Message.ReplyAsync(embed);
         public Task<DiscordMessage> ReplyAsync(DiscordMessageBuilder builder) => Message.ReplyAsync(builder);
         public void Deconstruct(out ArgumentCollector collector, out DiscordClient client, out CommandsExtension extension, out DiscordMessage message,
-            out DiscordGuild guild, out DiscordChannel channel, out DiscordUser author, out DiscordMember member, out bool privateChannel)
+            out DiscordGuild guild, out DiscordChannel channel, out DiscordUser author, out DiscordMember member, out bool privateChannel, out string rawCommandString, out string rawArgString)
         {
             collector = Collector;
             client = Client;
@@ -37,6 +39,8 @@ namespace Commands.CommandsStuff
             author = Author;
             member = Member;
             privateChannel = PrivateChannel;
+            rawCommandString = RawCommandString;
+            rawArgString = RawArgString;
         }
     }
     public class InteractionContext : CommandContext

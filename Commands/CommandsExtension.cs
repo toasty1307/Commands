@@ -19,7 +19,7 @@ namespace Commands
         public List<ulong> OwnerIds { get; }
         public CommandDispatcher Dispatcher { get; private set; }
         public CommandRegistry Registry { get; private set; }
-        public SettingProvider Provider { get; private set; }
+        public GuildContext Provider { get; private set; }
 
         public event AsyncEventHandler<DiscordMessage> UnknownCommand; 
         public event AsyncEventHandler<DiscordInteraction> UnknownCommandInteraction; 
@@ -47,14 +47,14 @@ namespace Commands
             Client = client;
             Registry = new CommandRegistry(Client);
             Dispatcher = new CommandDispatcher(Client, Registry);
-            Provider = new NpgSqlProvider(Constants.CommandsDbConnectionString, Client);
+            Provider = new GuildContext();
             Client.GuildDownloadCompleted += (_, _) => FetchOwners();
             Client.MessageCreated += Dispatcher.Handle;
             Client.InteractionCreated += Dispatcher.Handle;
             Client.ContextMenuInteractionCreated +=  Dispatcher.Handle;
             Client.ComponentInteractionCreated += Dispatcher.Handle;
             Client.MessageUpdated += Dispatcher.Handle;
-            _ = Task.Delay(0).ContinueWith(_ => Provider.Init());
+            Provider.DoCacheStuff();
         }
 
         public async Task FetchOwners()
@@ -71,21 +71,26 @@ namespace Commands
             }
         }
 
-        public void SetProvider(SettingProvider provider)
-        {
-            Provider = provider;
-            Provider?.Init();
-        }
-
         #region DontOpen
         
         public void CommandPrefixChanged(DiscordGuild channelGuild, string prefix)
         {
             CommandPrefixChange.SafeInvoke(channelGuild, prefix);
+            var entity = Provider.Get(channelGuild);
+            entity.Prefix = prefix;
+            Provider.Update(channelGuild, entity);
         }
-        public void CommandStatusChanged(DiscordGuild channelGuild, Command command, bool enable)
+        public void CommandStatusChanged(DiscordGuild guild, Command command, bool enable)
         {
-            CommandStatusChange.SafeInvoke(channelGuild, command, enable);
+            CommandStatusChange.SafeInvoke(guild, command, enable);
+            var entity = Provider.Get(guild);
+            entity.Commands.Remove(entity.Commands.First(x => x.Key.Name == command.Name).Key);
+            entity.Commands.Add(new DisabledCommandEntity
+            {
+                Name = command.Name,
+                GuildId = guild.Id
+            }, enable);
+            Provider.Update(guild, entity);
         }
         public void UnknownCommandRun(DiscordMessage message)
         {
@@ -110,10 +115,19 @@ namespace Commands
         public void GroupRegistered(Group group)
         {
             GroupRegister.SafeInvoke(group);
+            
         }
         public void GroupStatusChanged(DiscordGuild guild, Group @group, bool enabled)
         {
             GroupStatusChange.SafeInvoke(guild, group, enabled);
+            var entity = Provider.Get(guild);
+            entity.Groups.Remove(entity.Groups.First(x => x.Key.Name == group.Name).Key);
+            entity.Groups.Add(new DisabledGroupEntity
+            {
+                Name = group.Name,
+                GuildId = guild.Id
+            }, enabled);
+            Provider.Update(guild, entity);
         }
         public void CommandCanceled(Command command, string invalidArgs, DiscordInteraction interaction)
         {

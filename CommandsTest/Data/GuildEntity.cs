@@ -11,5 +11,6 @@ namespace CommandsTest.Data
         public ulong GuildId { get; set; }
 
         public List<BlacklistEntity> Blacklist { get; set; } = new();
+        public List<TagEntity> Tags { get; set; } = new();
     }
 }

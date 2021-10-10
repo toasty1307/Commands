@@ -87,6 +87,30 @@ namespace CommandsTest.Migrations
                     b.ToTable("Guilds");
                 });
 
+            modelBuilder.Entity("CommandsTest.Data.TagEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("ThePersonWhoMadeThisTagUserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId");
+
+                    b.ToTable("Tags");
+                });
+
             modelBuilder.Entity("CommandsTest.Data.BlacklistEntity", b =>
                 {
                     b.HasOne("CommandsTest.Data.GuildEntity", "GuildEntity")
@@ -112,6 +136,17 @@ namespace CommandsTest.Migrations
                         .HasForeignKey("BlacklistEntityId");
                 });
 
+            modelBuilder.Entity("CommandsTest.Data.TagEntity", b =>
+                {
+                    b.HasOne("CommandsTest.Data.GuildEntity", "GuildEntity")
+                        .WithMany("Tags")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GuildEntity");
+                });
+
             modelBuilder.Entity("CommandsTest.Data.BlacklistEntity", b =>
                 {
                     b.Navigation("Commands");
@@ -122,6 +157,8 @@ namespace CommandsTest.Migrations
             modelBuilder.Entity("CommandsTest.Data.GuildEntity", b =>
                 {
                     b.Navigation("Blacklist");
+
+                    b.Navigation("Tags");
                 });
 #pragma warning restore 612, 618
         }

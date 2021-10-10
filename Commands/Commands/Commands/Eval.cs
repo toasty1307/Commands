@@ -29,7 +29,7 @@ namespace Commands.Commands.Commands
         public override async Task Run(MessageContext ctx)
         {
             var prefix = ctx.Extension.Provider?.Get(ctx.Guild)!.Prefix ?? ctx.Extension.CommandPrefix;
-            var cs = ctx.GetArg<string>("Code");
+            var cs = ctx.RawArgString;
             if (cs.ToLower().Contains("process") || cs.ToLower().Contains("shutdown"))
             {
 	            await ctx.ReplyAsync("no.");

@@ -34,8 +34,8 @@ namespace Commands.Commands.Utils
 
         public override async Task Run(MessageContext ctx)
         {
-            var command = ctx.GetArg<Command>("CommandOrGroup", out var isCommand);
-            var group = ctx.GetArg<Group>("CommandOrGroup", out _);
+            var isCommand = ctx.GetArg<Command>("CommandOrGroup", out var command);
+            ctx.GetArg<Group>("CommandOrGroup", out var group);
             var showAll = command is null && group is null;
             if (showAll) await ctx.ReplyAsync(ProcessAllCommands(ctx.Guild, ctx.Author, ctx.Message.Id, ctx.Message.EditedTimestamp));
             else if (isCommand) await ctx.ReplyAsync(ProcessCommand(ctx.Guild, ctx.Author, command));
@@ -44,8 +44,8 @@ namespace Commands.Commands.Utils
 
         public override async Task Run(InteractionContext ctx)
         {
-            var command = ctx.GetArg<Command>("CommandOrGroup", out var isCommand);
-            var group = ctx.GetArg<Group>("CommandOrGroup", out _);
+            var isCommand = ctx.GetArg<Command>("CommandOrGroup", out var command);
+            ctx.GetArg<Group>("CommandOrGroup", out var group);
             var showAll = command is null && group is null;
             if (showAll) await ctx.ReplyAsync(ProcessAllCommands(ctx.Guild, ctx.Author, ctx.Interaction.Id, DateTimeOffset.Now));
             else if (isCommand) await ctx.ReplyAsync(ProcessCommand(ctx.Guild, ctx.Author, command));
@@ -95,7 +95,7 @@ namespace Commands.Commands.Utils
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e); 
+                Logger.Error(e); 
                 throw;
             }
         }

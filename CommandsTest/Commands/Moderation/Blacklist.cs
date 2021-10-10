@@ -32,8 +32,8 @@ namespace CommandsTest.Commands.Moderation
         public override async Task Run(MessageContext ctx)
         {
             var user = (DiscordMember)ctx.GetArg<DiscordUser>("User");
-            var command = ctx.GetArg<Command>("CommandOrGroup", out var isCommand);
-            var group = ctx.GetArg<Group>("CommandOrGroup", out _);
+            var isCommand = ctx.GetArg<Command>("CommandOrGroup", out var command);
+            ctx.GetArg<Group>("CommandOrGroup", out var group);
             var blacklistModule = Client.GetBlacklistModule();
             var result = isCommand ? blacklistModule.BlacklistUser(user, ctx.Guild, command) : blacklistModule.BlacklistUser(user, ctx.Guild, @group);
             var replyString = result switch
@@ -48,8 +48,8 @@ namespace CommandsTest.Commands.Moderation
         public override async Task Run(InteractionContext ctx)
         {
             var user = (DiscordMember)ctx.GetArg<DiscordUser>("User");
-            var command = ctx.GetArg<Command>("CommandOrGroup", out var isCommand);
-            var group = ctx.GetArg<Group>("CommandOrGroup", out _);
+            var isCommand = ctx.GetArg<Command>("CommandOrGroup", out var command);
+            ctx.GetArg<Group>("CommandOrGroup", out var group);
             var blacklistModule = Client.GetBlacklistModule();
             var result = isCommand ? blacklistModule.BlacklistUser(user, ctx.Guild, command) : blacklistModule.BlacklistUser(user, ctx.Guild, @group);
             var replyString = result switch

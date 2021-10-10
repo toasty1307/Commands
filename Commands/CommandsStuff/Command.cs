@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Commands.Data;
 using Commands.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -193,25 +194,28 @@ namespace Commands.CommandsStuff
             if (Nsfw && !message.Channel.IsNSFW) return (false, "NSFW");
             try
             {
-                if (!(Extension.Provider.Get(message.Channel.Guild)).Commands[this]) return (false, "DISABLED");
-                if (!(Extension.Provider.Get(message.Channel.Guild)).Groups[Group]) return (false, "GROUP_DISABLED");
+                var entity = Extension.Provider.Get(message.Channel.Guild);
+                if (entity.Commands.All(x => x.Key.Name != Name) || entity.Groups.All(x => x.Key.Name != Group.Name))
+                    throw new Exception("idk this guy");
+                if (entity.Commands.Any(x => !x.Value && x.Key.Name == Name)) return (false, "DISABLED");
+                if (entity.Groups.Any(x => !x.Value && x.Key.Name == Group.Name)) return (false, "GROUP_DISABLED");
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e);
-                if (!Extension.Provider.Get(message.Channel.Guild).Commands.ContainsKey(this))
+                Logger.Error(e);
+                if (Extension.Provider.Get(message.Channel.Guild).Commands.All(x => x.Key.Name != Name))
                 {
                     var guildSettings = Extension.Provider.Get(message.Channel.Guild);
-                    guildSettings.Commands.Add(this, true);
-                    Extension.Provider.Set(message.Channel.Guild, guildSettings, true);
-                    Client.Logger.LogWarning("Command was not in DB, added it");
+                    guildSettings.Commands.Add(new DisabledCommandEntity{Name = Name, GuildId = message.Channel?.Guild?.Id ?? 0}, true);
+                    Extension.Provider.Update(message.Channel.Guild, guildSettings);
+                    Logger.LogWarning("Command was not in DB, added it");
                 }
-                if (!Extension.Provider.Get(message.Channel.Guild).Groups.ContainsKey(Group))
+                if (Extension.Provider.Get(message.Channel.Guild).Groups.All(x => x.Key.Name != Group.Name))
                 {
                     var guildSettings = Extension.Provider.Get(message.Channel.Guild);
-                    guildSettings.Groups.Add(Group, true);
-                    Extension.Provider.Set(message.Channel.Guild, guildSettings, true);
-                    Client.Logger.LogWarning("Group was not in DB, added it");
+                    guildSettings.Groups.Add(new DisabledGroupEntity{Name = Group.Name, GuildId = message.Channel?.Guild?.Id ?? 0}, true);
+                    Extension.Provider.Update(message.Channel.Guild, guildSettings);
+                    Logger.LogWarning("Group was not in DB, added it");
                 }
                 return (true, null);
             }
@@ -247,12 +251,15 @@ namespace Commands.CommandsStuff
             if (Nsfw && !interaction.Channel.IsNSFW) return (false, "NSFW");
             try
             {
-                if (!(Extension.Provider.Get(interaction.Channel.Guild)).Commands[this]) return (false, "DISABLED");
-                if (!(Extension.Provider.Get(interaction.Channel.Guild)).Groups[Group]) return (false, "GROUP_DISABLED");
+                var entity = Extension.Provider.Get(interaction.Guild);
+                if (entity.Commands.All(x => x.Key.Name != Name) || entity.Groups.All(x => x.Key.Name != Group.Name))
+                    throw new Exception("idk this guy");
+                if (entity.Commands.Any(x => !x.Value && x.Key.Name == Name)) return (false, "DISABLED");
+                if (entity.Groups.Any(x => !x.Value && x.Key.Name == Group.Name)) return (false, "GROUP_DISABLED");
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e);
+                Logger.Error(e);
                 return (true, null);
             }
             if (GetThrottle(interaction.User) is not null) return (false, "THROTTLING");

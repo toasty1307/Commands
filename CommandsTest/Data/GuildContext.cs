@@ -6,6 +6,7 @@ namespace CommandsTest.Data
     {
         public DbSet<GuildEntity> Guilds { get; set; }
         public DbSet<BlacklistEntity> Blacklist { get; set; }
+        public DbSet<TagEntity> Tags { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -18,6 +19,11 @@ namespace CommandsTest.Data
                 .HasMany(x => x.Blacklist)
                 .WithOne(x => x.GuildEntity)
                 .HasForeignKey(x => x.GuildId);
+            modelBuilder.Entity<GuildEntity>()
+                .HasMany(x => x.Tags)
+                .WithOne(x => x.GuildEntity)
+                .HasForeignKey(x => x.GuildId);
+            
             modelBuilder.Entity<BlacklistEntity>()
                 .HasMany(x => x.Commands);
             modelBuilder.Entity<BlacklistEntity>()

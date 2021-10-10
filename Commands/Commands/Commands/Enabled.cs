@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Commands.CommandsStuff;
 using DSharpPlus;
 
@@ -28,7 +29,7 @@ namespace Commands.Commands.Commands
 
         public override async Task Run(MessageContext ctx)
         {
-            var group = ctx.GetArg<Group>("CommandOrGroup", out var isGroup);
+            var isGroup = ctx.GetArg<Group>("CommandOrGroup", out var group);
             var enable = ctx.GetArg<bool?>("Enable");
             var provider = ctx.Extension.Provider;
 
@@ -40,7 +41,7 @@ namespace Commands.Commands.Commands
 
             if (isGroup)
             {
-                var enabled = provider.Get(ctx.Guild).Groups[group];
+                var enabled = provider.Get(ctx.Guild).Groups.First(x => x.Key.Name == group.Name).Value;
                 if (enable is null)
                     await ctx.ReplyAsync(
                         $"The Group {@group.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
@@ -55,7 +56,7 @@ namespace Commands.Commands.Commands
             else
             {
                 var command = ctx.GetArg<Command>("CommandOrGroup");
-                var enabled = provider.Get(ctx.Guild).Commands[command];
+                var enabled = provider.Get(ctx.Guild).Commands.First(x => x.Key.Name == command.Name).Value;
                 if (enable is null)
                     await ctx.ReplyAsync(
                         $"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
@@ -71,7 +72,7 @@ namespace Commands.Commands.Commands
 
         public override async Task Run(InteractionContext ctx)
         {
-            var group = ctx.GetArg<Group>("CommandOrGroup", out var isGroup);
+            var isGroup = ctx.GetArg<Group>("CommandOrGroup", out var group);
             var enable = ctx.GetArg<bool?>("Enable");
             var provider = ctx.Extension.Provider;
 
@@ -83,7 +84,7 @@ namespace Commands.Commands.Commands
 
             if (isGroup)
             {
-                var enabled = provider.Get(ctx.Guild).Groups[group];
+                var enabled = provider.Get(ctx.Guild).Groups.First(x => x.Key.Name == group.Name).Value;
                 if (enable is null)
                     await ctx.ReplyAsync(
                         $"The Group {@group.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");
@@ -98,7 +99,7 @@ namespace Commands.Commands.Commands
             else
             {
                 var command = ctx.GetArg<Command>("CommandOrGroup");
-                var enabled = provider.Get(ctx.Guild).Commands[command];
+                var enabled = provider.Get(ctx.Guild).Commands.First(x => x.Key.Name == command.Name).Value;
                 if (enable is null)
                     await ctx.ReplyAsync(
                         $"The Command {command.Name} is {(enabled ? "Enabled" : "Disabled")} in {ctx.Guild.Name}");

@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Commands.CommandsStuff;
+using CommandsTest.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
@@ -7,6 +8,7 @@ namespace CommandsTest.Commands.Misc
 {
     public class Afk : Command
     {
+        
         public Afk(DiscordClient client) : base(client) { }
         public override string GroupName => "Misc";
 
@@ -38,16 +40,40 @@ namespace CommandsTest.Commands.Misc
 
         public override async Task Run(MessageContext ctx)
         {
-            await ctx.ReplyAsync(ctx.GetArg<string>("SetOrClear") ?? "null");
-            await ctx.ReplyAsync(ctx.GetArg<DiscordUser>("UserToClear")?.Username ?? "null");
-            await ctx.ReplyAsync(ctx.GetArg<string>("Message") ?? "null");
+            var afkModule = ctx.Client.GetAfkModule();
+            var setOrClear = ctx.GetArg<string>("SetOrClear");
+            var message = ctx.GetArg<string>("Message");
+            var userToRemove = ctx.GetArg<DiscordUser>("UserToClear");
+            switch (setOrClear)
+            {
+                case "set":
+                    afkModule.SetAfk(ctx.Author, message);
+                    await ctx.ReplyAsync($"<@{ctx.Author.Id}> i set your afk: {message}");
+                    break;
+                case "clear":
+                    afkModule.RemoveAfk(userToRemove);
+                    await ctx.ReplyAsync($"removed afk for {userToRemove.Id}");
+                    break;
+            }
         }
 
         public override async Task Run(InteractionContext ctx)
         {
-            await ctx.ReplyAsync(ctx.GetArg<string>("SetOrClear") ?? "null");
-            await ctx.ReplyAsync(ctx.GetArg<DiscordUser>("UserToClear")?.Username ?? "null");
-            await ctx.ReplyAsync(ctx.GetArg<string>("Message") ?? "null");
+            var afkModule = ctx.Client.GetAfkModule();
+            var setOrClear = ctx.GetArg<string>("SetOrClear");
+            var message = ctx.GetArg<string>("Message");
+            var userToRemove = ctx.GetArg<DiscordUser>("UserToClear");
+            switch (setOrClear)
+            {
+                case "set":
+                    afkModule.SetAfk(ctx.Author, message);
+                    await ctx.ReplyAsync($"<@{ctx.Author.Id}> i set your afk: {message}");
+                    break;
+                case "clear":
+                    afkModule.RemoveAfk(userToRemove);
+                    await ctx.ReplyAsync($"removed afk for {userToRemove.Username}");
+                    break;
+            }
         }
     }
 }

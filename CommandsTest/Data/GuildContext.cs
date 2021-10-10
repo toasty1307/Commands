@@ -7,7 +7,7 @@ namespace CommandsTest.Data
         public DbSet<GuildEntity> Guilds { get; set; }
         public DbSet<BlacklistEntity> Blacklist { get; set; }
         public DbSet<TagEntity> Tags { get; set; }
-
+        public DbSet<AfkEntity> Afk { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseNpgsql(Constants.DatabaseConnectionString);

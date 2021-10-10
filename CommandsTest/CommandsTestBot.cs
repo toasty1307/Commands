@@ -20,6 +20,7 @@ namespace CommandsTest
     {
         private DiscordClient Client { get; }
         private BlacklistModule BlacklistModule { get; }
+        private AfkModule AfkModule { get; }
         
         public CommandsTestBot()
         {
@@ -38,6 +39,8 @@ namespace CommandsTest
                 Invite = "discord.gg/TCf7QexN5e"
             };
             Client = new DiscordClient(discordConfiguration);
+            AfkModule = Client.AddAfkModule();
+            Client.MessageCreated += AfkModule.OnMessage;
             var commandsExtension = Client.UseCommands(new CommandsExtension(commandsConfig));
             commandsExtension.Registry.RegisterDefaults();
             commandsExtension.Registry.RegisterGroups(new Group[]

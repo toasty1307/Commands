@@ -14,5 +14,14 @@ namespace CommandsTest.Utils
             BlacklistModules.Add(client, module);
             return module;
         }
+        
+        private static Dictionary<DiscordClient, AfkModule> AfkModules { get; set; } = new();
+        public static AfkModule GetAfkModule(this DiscordClient client) => AfkModules[client];
+        public static AfkModule AddAfkModule(this DiscordClient client)
+        {
+            var module = new AfkModule();
+            AfkModules.Add(client, module);
+            return module;
+        }
     }
 }

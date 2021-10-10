@@ -5,52 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="94bf8c1b-675b-4de2-ad6b-b1483e421044" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Commands/CommandsStuff/ArgumentParser.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/CommandsStuff/ArgumentParserData.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/CoolStuff/Pagination/Page.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/CoolStuff/Pagination/PaginatedMessage.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Data/DisabledCommandEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Data/DisabledGroupEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Data/GuildContext.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Data/GuildEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Migrations/20211003104109_InitialCreate.Designer.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Migrations/20211003104109_InitialCreate.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Migrations/20211003104457_ValueComparer.Designer.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Migrations/20211003104457_ValueComparer.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Commands/Migrations/GuildContextModelSnapshot.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CommandsTest/Commands/Misc/Tag.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CommandsTest/Data/TagEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CommandsTest/Modules/GlobalTags.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/discord.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/discord.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandDispatcher.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandDispatcher.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandRegistry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandRegistry.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Commands.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Commands.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Commands/Commands/Enabled.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Commands/Commands/Enabled.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Commands/Commands/Eval.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Commands/Commands/Eval.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Commands/Utils/Help.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Commands/Utils/Help.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Commands/Utils/Poll.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Commands/Utils/Poll.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandsBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandsBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandsExtension.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandsExtension.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandsStuff/Argument.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandsStuff/Argument.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandsStuff/ArgumentCollector.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandsStuff/ArgumentCollector.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandsStuff/Command.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandsStuff/Command.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandsStuff/MessageContext.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandsStuff/CommandContext.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Data/GuildSettings.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Data/NpgSqlProvider.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Data/SettingProvider.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Types/DiscordChannel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Types/DiscordChannel.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Utils/Extensions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Utils/Extensions.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/Utils/Logger.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Utils/Logger.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommandsTest/Commands/Misc/Echo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Commands/Misc/Echo.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommandsTest/Commands/Moderation/Blacklist.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Commands/Moderation/Blacklist.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommandsTest/Commands/Moderation/Whitelist.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Commands/Moderation/Whitelist.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CommandsTest/Data/AfkEntity.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CommandsTest/Modules/AfkModule.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/dataSources/8606296f-41fd-407d-990d-65c8b77314b4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/dataSources/8606296f-41fd-407d-990d-65c8b77314b4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/dataSources/8606296f-41fd-407d-990d-65c8b77314b4/storage_v2/_src_/database/CommandsTest.WpNwfw/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/dataSources/8606296f-41fd-407d-990d-65c8b77314b4/storage_v2/_src_/database/CommandsTest.WpNwfw/schema/public.abK9xQ.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Commands.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/Commands.sln.DotSettings.user" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CommandsTest/Commands/Misc/Afk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Commands/Misc/Afk.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CommandsTest/Commands/Misc/Tag.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Commands/Misc/Tag.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CommandsTest/CommandsTestBot.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/CommandsTestBot.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommandsTest/Data/BlacklistCommandEntity.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Data/BlacklistCommandEntity.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CommandsTest/Data/GuildContext.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Data/GuildContext.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommandsTest/Data/GuildEntity.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Data/GuildEntity.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CommandsTest/Migrations/GuildContextModelSnapshot.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Migrations/GuildContextModelSnapshot.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommandsTest/Modules/BlacklistModule.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Modules/BlacklistModule.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CommandsTest/Utils/Extentions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Utils/Extentions.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,7 +27,9 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2b4a9bf56bff4e5a833d8c1ea3806766a11870/268/ExceptionDispatchInfo.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/60e2219489a94b41b9719a10989e2aa3168178/154/SingleQueryingEnumerable.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///Dummy.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="ProjectId" id="1zGW6O86n36FUIjBzxQmRdAwVKd" />
   <component name="ProjectLevelVcsManager">
@@ -78,6 +46,8 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="database.data.extractors.current.export.id" value="Comma-separated (CSV)_id" />
+    <property name="database.data.extractors.current.id" value="Comma-separated (CSV)_id" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="project.propDebugger" />
@@ -116,8 +86,16 @@
       <workItem from="1633776061469" duration="86000" />
       <workItem from="1633789548836" duration="8017000" />
       <workItem from="1633840053268" duration="1281000" />
-      <workItem from="1633843050906" duration="3441000" />
+      <workItem from="1633843050906" duration="22970000" />
     </task>
+    <task id="LOCAL-00001" summary="drinking milk">
+      <created>1633847249827</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1633847249827</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -140,5 +118,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="drinking milk" />
+    <option name="LAST_COMMIT_MESSAGE" value="drinking milk" />
   </component>
 </project>

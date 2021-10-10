@@ -792,8 +792,8 @@ false YEKT
 false Z
 false Zulu
 </TimeZones>
-      <IntrospectionStateNumber>948</IntrospectionStateNumber>
-      <StartupTime>1633773114</StartupTime>
+      <IntrospectionStateNumber>983</IntrospectionStateNumber>
+      <StartupTime>1633842857</StartupTime>
     </root>
     <database id="2" parent="1" name="Commands">
       <ObjectId>24577</ObjectId>
@@ -812,7 +812,7 @@ false Zulu
 13158||-9223372036854775808|U|G
 13158||10|U|G</Grants>
       <Owner>toasty</Owner>
-      <IntrospectionStateNumber>949</IntrospectionStateNumber>
+      <IntrospectionStateNumber>984</IntrospectionStateNumber>
       <Current>1</Current>
     </database>
     <database id="4" parent="1" name="ToastyTriesEF">
@@ -894,7 +894,7 @@ false Zulu
       <Comment>standard public schema</Comment>
       <StateNumber>287</StateNumber>
       <Owner>postgres</Owner>
-      <IntrospectionStateNumber>949</IntrospectionStateNumber>
+      <IntrospectionStateNumber>984</IntrospectionStateNumber>
       <Current>1</Current>
     </schema>
     <extension id="21" parent="3" name="plpgsql">
@@ -995,57 +995,108 @@ false Zulu
       <Handler>pg_catalog.spghandler</Handler>
       <HandlerId>334</HandlerId>
     </access-method>
-    <table id="33" parent="20" name="Blacklist">
+    <table id="33" parent="20" name="Afk">
+      <ObjectId>82050</ObjectId>
+      <Owner>toasty</Owner>
+      <StateNumber>981</StateNumber>
+      <AccessMethodId>2</AccessMethodId>
+    </table>
+    <table id="34" parent="20" name="Blacklist">
       <ObjectId>49336</ObjectId>
       <Owner>toasty</Owner>
       <StateNumber>782</StateNumber>
       <AccessMethodId>2</AccessMethodId>
     </table>
-    <table id="34" parent="20" name="CommandEntity">
+    <table id="35" parent="20" name="CommandEntity">
       <ObjectId>49346</ObjectId>
       <Owner>toasty</Owner>
       <StateNumber>908</StateNumber>
       <AccessMethodId>2</AccessMethodId>
     </table>
-    <table id="35" parent="20" name="GroupEntity">
+    <table id="36" parent="20" name="GroupEntity">
       <ObjectId>49359</ObjectId>
       <Owner>toasty</Owner>
       <StateNumber>908</StateNumber>
       <AccessMethodId>2</AccessMethodId>
     </table>
-    <table id="36" parent="20" name="Guilds">
+    <table id="37" parent="20" name="Guilds">
       <ObjectId>49331</ObjectId>
       <Owner>toasty</Owner>
       <StateNumber>899</StateNumber>
       <AccessMethodId>2</AccessMethodId>
     </table>
-    <table id="37" parent="20" name="Tags">
+    <table id="38" parent="20" name="Tags">
       <ObjectId>73858</ObjectId>
       <Owner>toasty</Owner>
-      <StateNumber>944</StateNumber>
+      <StateNumber>950</StateNumber>
       <AccessMethodId>2</AccessMethodId>
     </table>
-    <table id="38" parent="20" name="__EFMigrationsHistory">
+    <table id="39" parent="20" name="__EFMigrationsHistory">
       <ObjectId>49326</ObjectId>
       <Owner>toasty</Owner>
       <StateNumber>781</StateNumber>
       <AccessMethodId>2</AccessMethodId>
     </table>
-    <column id="39" parent="33" name="Id">
+    <column id="40" parent="33" name="Id">
+      <Position>1</Position>
+      <DataType>text|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>981</StateNumber>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="41" parent="33" name="UserId">
+      <Position>2</Position>
+      <DataType>numeric(20)|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>981</StateNumber>
+      <TypeId>1700</TypeId>
+    </column>
+    <column id="42" parent="33" name="AfkSetTime">
+      <Position>3</Position>
+      <DataType>timestamp with time zone|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>981</StateNumber>
+      <TypeId>1184</TypeId>
+    </column>
+    <column id="43" parent="33" name="Message">
+      <Position>4</Position>
+      <DataType>text|0s</DataType>
+      <StateNumber>981</StateNumber>
+      <TypeId>25</TypeId>
+    </column>
+    <index id="44" parent="33" name="PK_Afk">
+      <ObjectId>82056</ObjectId>
+      <StateNumber>981</StateNumber>
+      <ColNames>Id</ColNames>
+      <Unique>1</Unique>
+      <Primary>1</Primary>
+      <CollationIds>100</CollationIds>
+      <CollationNames>default</CollationNames>
+      <ClassIds>3126</ClassIds>
+      <AccessMethodId>403</AccessMethodId>
+    </index>
+    <key id="45" parent="33" name="PK_Afk">
+      <ObjectId>82057</ObjectId>
+      <StateNumber>981</StateNumber>
+      <ColNames>Id</ColNames>
+      <Primary>1</Primary>
+      <UnderlyingIndexName>PK_Afk</UnderlyingIndexName>
+    </key>
+    <column id="46" parent="34" name="Id">
       <Position>1</Position>
       <DataType>numeric(20)|0s</DataType>
       <NotNull>1</NotNull>
       <StateNumber>782</StateNumber>
       <TypeId>1700</TypeId>
     </column>
-    <column id="40" parent="33" name="GuildId">
+    <column id="47" parent="34" name="GuildId">
       <Position>2</Position>
       <DataType>numeric(20)|0s</DataType>
       <NotNull>1</NotNull>
       <StateNumber>782</StateNumber>
       <TypeId>1700</TypeId>
     </column>
-    <index id="41" parent="33" name="PK_Blacklist">
+    <index id="48" parent="34" name="PK_Blacklist">
       <ObjectId>49339</ObjectId>
       <StateNumber>782</StateNumber>
       <ColNames>Id</ColNames>
@@ -1055,7 +1106,7 @@ false Zulu
       <ClassIds>3125</ClassIds>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="42" parent="33" name="IX_Blacklist_GuildId">
+    <index id="49" parent="34" name="IX_Blacklist_GuildId">
       <ObjectId>49372</ObjectId>
       <StateNumber>782</StateNumber>
       <ColNames>GuildId</ColNames>
@@ -1063,14 +1114,14 @@ false Zulu
       <ClassIds>3125</ClassIds>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="43" parent="33" name="PK_Blacklist">
+    <key id="50" parent="34" name="PK_Blacklist">
       <ObjectId>49340</ObjectId>
       <StateNumber>782</StateNumber>
       <ColNames>Id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>PK_Blacklist</UnderlyingIndexName>
     </key>
-    <foreign-key id="44" parent="33" name="FK_Blacklist_Guilds_GuildId">
+    <foreign-key id="51" parent="34" name="FK_Blacklist_Guilds_GuildId">
       <ObjectId>49341</ObjectId>
       <StateNumber>782</StateNumber>
       <ColNames>GuildId</ColNames>
@@ -1080,62 +1131,6 @@ false Zulu
       <RefKeyName>PK_Guilds</RefKeyName>
       <RefColNames>Id</RefColNames>
       <OnDelete>cascade</OnDelete>
-    </foreign-key>
-    <column id="45" parent="34" name="Name">
-      <Position>1</Position>
-      <DataType>text|0s</DataType>
-      <StateNumber>908</StateNumber>
-      <TypeId>25</TypeId>
-    </column>
-    <column id="46" parent="34" name="BlacklistEntityId">
-      <Position>2</Position>
-      <DataType>numeric(20)|0s</DataType>
-      <StateNumber>782</StateNumber>
-      <TypeId>1700</TypeId>
-    </column>
-    <column id="47" parent="34" name="Id">
-      <Position>3</Position>
-      <DataType>text|0s</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>908</StateNumber>
-      <DefaultExpression>&apos;&apos;::text</DefaultExpression>
-      <TypeId>25</TypeId>
-    </column>
-    <index id="48" parent="34" name="PK_CommandEntity">
-      <ObjectId>57485</ObjectId>
-      <StateNumber>908</StateNumber>
-      <ColNames>Id</ColNames>
-      <Unique>1</Unique>
-      <Primary>1</Primary>
-      <CollationIds>100</CollationIds>
-      <CollationNames>default</CollationNames>
-      <ClassIds>3126</ClassIds>
-      <AccessMethodId>403</AccessMethodId>
-    </index>
-    <index id="49" parent="34" name="IX_CommandEntity_BlacklistEntityId">
-      <ObjectId>49373</ObjectId>
-      <StateNumber>782</StateNumber>
-      <ColNames>BlacklistEntityId</ColNames>
-      <CollationIds>0</CollationIds>
-      <ClassIds>3125</ClassIds>
-      <AccessMethodId>403</AccessMethodId>
-    </index>
-    <key id="50" parent="34" name="PK_CommandEntity">
-      <ObjectId>57486</ObjectId>
-      <StateNumber>908</StateNumber>
-      <ColNames>Id</ColNames>
-      <Primary>1</Primary>
-      <UnderlyingIndexName>PK_CommandEntity</UnderlyingIndexName>
-    </key>
-    <foreign-key id="51" parent="34" name="FK_CommandEntity_Blacklist_BlacklistEntityId">
-      <ObjectId>49354</ObjectId>
-      <StateNumber>782</StateNumber>
-      <ColNames>BlacklistEntityId</ColNames>
-      <RefTableId>49336</RefTableId>
-      <RefColPositions>1</RefColPositions>
-      <RefTableName>Blacklist</RefTableName>
-      <RefKeyName>PK_Blacklist</RefKeyName>
-      <RefColNames>Id</RefColNames>
     </foreign-key>
     <column id="52" parent="35" name="Name">
       <Position>1</Position>
@@ -1157,7 +1152,63 @@ false Zulu
       <DefaultExpression>&apos;&apos;::text</DefaultExpression>
       <TypeId>25</TypeId>
     </column>
-    <index id="55" parent="35" name="PK_GroupEntity">
+    <index id="55" parent="35" name="PK_CommandEntity">
+      <ObjectId>57485</ObjectId>
+      <StateNumber>908</StateNumber>
+      <ColNames>Id</ColNames>
+      <Unique>1</Unique>
+      <Primary>1</Primary>
+      <CollationIds>100</CollationIds>
+      <CollationNames>default</CollationNames>
+      <ClassIds>3126</ClassIds>
+      <AccessMethodId>403</AccessMethodId>
+    </index>
+    <index id="56" parent="35" name="IX_CommandEntity_BlacklistEntityId">
+      <ObjectId>49373</ObjectId>
+      <StateNumber>782</StateNumber>
+      <ColNames>BlacklistEntityId</ColNames>
+      <CollationIds>0</CollationIds>
+      <ClassIds>3125</ClassIds>
+      <AccessMethodId>403</AccessMethodId>
+    </index>
+    <key id="57" parent="35" name="PK_CommandEntity">
+      <ObjectId>57486</ObjectId>
+      <StateNumber>908</StateNumber>
+      <ColNames>Id</ColNames>
+      <Primary>1</Primary>
+      <UnderlyingIndexName>PK_CommandEntity</UnderlyingIndexName>
+    </key>
+    <foreign-key id="58" parent="35" name="FK_CommandEntity_Blacklist_BlacklistEntityId">
+      <ObjectId>49354</ObjectId>
+      <StateNumber>782</StateNumber>
+      <ColNames>BlacklistEntityId</ColNames>
+      <RefTableId>49336</RefTableId>
+      <RefColPositions>1</RefColPositions>
+      <RefTableName>Blacklist</RefTableName>
+      <RefKeyName>PK_Blacklist</RefKeyName>
+      <RefColNames>Id</RefColNames>
+    </foreign-key>
+    <column id="59" parent="36" name="Name">
+      <Position>1</Position>
+      <DataType>text|0s</DataType>
+      <StateNumber>908</StateNumber>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="60" parent="36" name="BlacklistEntityId">
+      <Position>2</Position>
+      <DataType>numeric(20)|0s</DataType>
+      <StateNumber>782</StateNumber>
+      <TypeId>1700</TypeId>
+    </column>
+    <column id="61" parent="36" name="Id">
+      <Position>3</Position>
+      <DataType>text|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>908</StateNumber>
+      <DefaultExpression>&apos;&apos;::text</DefaultExpression>
+      <TypeId>25</TypeId>
+    </column>
+    <index id="62" parent="36" name="PK_GroupEntity">
       <ObjectId>57483</ObjectId>
       <StateNumber>908</StateNumber>
       <ColNames>Id</ColNames>
@@ -1168,7 +1219,7 @@ false Zulu
       <ClassIds>3126</ClassIds>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="56" parent="35" name="IX_GroupEntity_BlacklistEntityId">
+    <index id="63" parent="36" name="IX_GroupEntity_BlacklistEntityId">
       <ObjectId>49374</ObjectId>
       <StateNumber>782</StateNumber>
       <ColNames>BlacklistEntityId</ColNames>
@@ -1176,14 +1227,14 @@ false Zulu
       <ClassIds>3125</ClassIds>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="57" parent="35" name="PK_GroupEntity">
+    <key id="64" parent="36" name="PK_GroupEntity">
       <ObjectId>57484</ObjectId>
       <StateNumber>908</StateNumber>
       <ColNames>Id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>PK_GroupEntity</UnderlyingIndexName>
     </key>
-    <foreign-key id="58" parent="35" name="FK_GroupEntity_Blacklist_BlacklistEntityId">
+    <foreign-key id="65" parent="36" name="FK_GroupEntity_Blacklist_BlacklistEntityId">
       <ObjectId>49367</ObjectId>
       <StateNumber>782</StateNumber>
       <ColNames>BlacklistEntityId</ColNames>
@@ -1193,14 +1244,14 @@ false Zulu
       <RefKeyName>PK_Blacklist</RefKeyName>
       <RefColNames>Id</RefColNames>
     </foreign-key>
-    <column id="59" parent="36" name="Id">
+    <column id="66" parent="37" name="Id">
       <Position>1</Position>
       <DataType>numeric(20)|0s</DataType>
       <NotNull>1</NotNull>
       <StateNumber>782</StateNumber>
       <TypeId>1700</TypeId>
     </column>
-    <column id="60" parent="36" name="GuildId">
+    <column id="67" parent="37" name="GuildId">
       <Position>2</Position>
       <DataType>numeric(20)|0s</DataType>
       <NotNull>1</NotNull>
@@ -1208,7 +1259,7 @@ false Zulu
       <DefaultExpression>0.0</DefaultExpression>
       <TypeId>1700</TypeId>
     </column>
-    <index id="61" parent="36" name="PK_Guilds">
+    <index id="68" parent="37" name="PK_Guilds">
       <ObjectId>49334</ObjectId>
       <StateNumber>782</StateNumber>
       <ColNames>Id</ColNames>
@@ -1218,41 +1269,47 @@ false Zulu
       <ClassIds>3125</ClassIds>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="62" parent="36" name="PK_Guilds">
+    <key id="69" parent="37" name="PK_Guilds">
       <ObjectId>49335</ObjectId>
       <StateNumber>782</StateNumber>
       <ColNames>Id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>PK_Guilds</UnderlyingIndexName>
     </key>
-    <column id="63" parent="37" name="Id">
+    <column id="70" parent="38" name="Id">
       <Position>1</Position>
       <DataType>text|0s</DataType>
       <NotNull>1</NotNull>
       <StateNumber>944</StateNumber>
       <TypeId>25</TypeId>
     </column>
-    <column id="64" parent="37" name="GuildId">
+    <column id="71" parent="38" name="GuildId">
       <Position>2</Position>
       <DataType>numeric(20)|0s</DataType>
       <NotNull>1</NotNull>
       <StateNumber>944</StateNumber>
       <TypeId>1700</TypeId>
     </column>
-    <column id="65" parent="37" name="ThePersonWhoMadeThisTagUserId">
+    <column id="72" parent="38" name="ThePersonWhoMadeThisTagUserId">
       <Position>3</Position>
       <DataType>numeric(20)|0s</DataType>
       <NotNull>1</NotNull>
       <StateNumber>944</StateNumber>
       <TypeId>1700</TypeId>
     </column>
-    <column id="66" parent="37" name="Content">
+    <column id="73" parent="38" name="Content">
       <Position>4</Position>
       <DataType>text|0s</DataType>
       <StateNumber>944</StateNumber>
       <TypeId>25</TypeId>
     </column>
-    <index id="67" parent="37" name="PK_Tags">
+    <column id="74" parent="38" name="Name">
+      <Position>5</Position>
+      <DataType>text|0s</DataType>
+      <StateNumber>950</StateNumber>
+      <TypeId>25</TypeId>
+    </column>
+    <index id="75" parent="38" name="PK_Tags">
       <ObjectId>73864</ObjectId>
       <StateNumber>944</StateNumber>
       <ColNames>Id</ColNames>
@@ -1263,7 +1320,7 @@ false Zulu
       <ClassIds>3126</ClassIds>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="68" parent="37" name="IX_Tags_GuildId">
+    <index id="76" parent="38" name="IX_Tags_GuildId">
       <ObjectId>73871</ObjectId>
       <StateNumber>944</StateNumber>
       <ColNames>GuildId</ColNames>
@@ -1271,14 +1328,14 @@ false Zulu
       <ClassIds>3125</ClassIds>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="69" parent="37" name="PK_Tags">
+    <key id="77" parent="38" name="PK_Tags">
       <ObjectId>73865</ObjectId>
       <StateNumber>944</StateNumber>
       <ColNames>Id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>PK_Tags</UnderlyingIndexName>
     </key>
-    <foreign-key id="70" parent="37" name="FK_Tags_Guilds_GuildId">
+    <foreign-key id="78" parent="38" name="FK_Tags_Guilds_GuildId">
       <ObjectId>73866</ObjectId>
       <StateNumber>944</StateNumber>
       <ColNames>GuildId</ColNames>
@@ -1289,21 +1346,21 @@ false Zulu
       <RefColNames>Id</RefColNames>
       <OnDelete>cascade</OnDelete>
     </foreign-key>
-    <column id="71" parent="38" name="MigrationId">
+    <column id="79" parent="39" name="MigrationId">
       <Position>1</Position>
       <DataType>varchar(150)|0s</DataType>
       <NotNull>1</NotNull>
       <StateNumber>781</StateNumber>
       <TypeId>1043</TypeId>
     </column>
-    <column id="72" parent="38" name="ProductVersion">
+    <column id="80" parent="39" name="ProductVersion">
       <Position>2</Position>
       <DataType>varchar(32)|0s</DataType>
       <NotNull>1</NotNull>
       <StateNumber>781</StateNumber>
       <TypeId>1043</TypeId>
     </column>
-    <index id="73" parent="38" name="PK___EFMigrationsHistory">
+    <index id="81" parent="39" name="PK___EFMigrationsHistory">
       <ObjectId>49329</ObjectId>
       <StateNumber>781</StateNumber>
       <ColNames>MigrationId</ColNames>
@@ -1314,7 +1371,7 @@ false Zulu
       <ClassIds>3126</ClassIds>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="74" parent="38" name="PK___EFMigrationsHistory">
+    <key id="82" parent="39" name="PK___EFMigrationsHistory">
       <ObjectId>49330</ObjectId>
       <StateNumber>781</StateNumber>
       <ColNames>MigrationId</ColNames>

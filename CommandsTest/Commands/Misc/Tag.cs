@@ -47,21 +47,21 @@ namespace CommandsTest.Commands.Misc
                 Default = "all",
                 Optional = true
             },
-            new()
+            new() 
             {
                 Key = "TagContent",
                 Types = new []{typeof(string)},
                 Optional = true,
-                Default = "_",
+                Default = string.Empty,
                 Infinite = true
             }
         };
 
-        public override async Task Run(MessageContext ctx)
+        public override async Task Run(MessageContext ctx) 
         {
-            var tagContent = ctx.GetArg<string>("TagContent");
-            var tagName = tagContent == "_" ? ctx.GetArg<string>("TagName") : $"{ctx.GetArg<string>("TagName")} {tagContent}";
+            var tagContent = ctx.GetArg<string>("TagContent").Trim();
             var createOrDeleteOrGet = ctx.GetArg<string>("CreateOrDeleteOrGet");
+            var tagName = createOrDeleteOrGet == "create" ? ctx.GetArg<string>("TagName") : $"{ctx.GetArg<string>("TagName")} {tagContent}".Trim();
             switch (createOrDeleteOrGet)
             {
                 case "get":
@@ -69,8 +69,8 @@ namespace CommandsTest.Commands.Misc
                     {
                         var pagesStringArrayListIHaveNoIdea = _globalTags.Select(x => x.Name).ToList();
                         pagesStringArrayListIHaveNoIdea.AddRange(_allTags.Where(x => x.GuildId == ctx.Guild.Id).Select(x => x.Name)); 
-                        var pagesData = pagesStringArrayListIHaveNoIdea.Partition(Math.Max(pagesStringArrayListIHaveNoIdea.Count / 2, 1)).Where(x => x.Count != 0).ToList().SelectMany(x => x).Distinct();
-                        var pages = pagesData.Select(tag => new Page {Content = string.Join('\n', $"Global tag `{tag}`")}).ToList();
+                        var pagesData = pagesStringArrayListIHaveNoIdea.Partition(1).Where(x => x.Count != 0).ToList().SelectMany(x => x).Distinct();
+                        var pages = pagesData.Select(tag => new Page {Content = string.Join('\n', $"{(_allTags.Any(x => x.Name == tag) ? "Guild" : "Global")} tag `{tag}`")}).ToList();
                         var paginatedMessage = new PaginatedMessage(pages, ctx.Extension.Dispatcher, ctx.Author, false);
                         await ctx.ReplyAsync(paginatedMessage);
                         return;
@@ -86,7 +86,7 @@ namespace CommandsTest.Commands.Misc
                     }
                     var type = _tagsModule.First(x => method!.DeclaringType == x.GetType());
                     var tagResult = (string)method.Invoke(type, new object[] {ctx});
-                    await ctx.ReplyAsync(tagResult);
+                    _ = ctx.Message.Reference is null ? await ctx.ReplyAsync(tagResult) : await ctx.Message.Reference.Message.ReplyAsync(tagResult);
                     break;
                 case "create":
                     if (_allTags.Any(x => string.Equals(x.Name, tagName, StringComparison.CurrentCultureIgnoreCase)))
@@ -120,9 +120,9 @@ namespace CommandsTest.Commands.Misc
 
         public override async Task Run(InteractionContext ctx)
         {
-            var tagName = ctx.GetArg<string>("TagName");
             var tagContent = ctx.GetArg<string>("TagContent");
             var createOrDeleteOrGet = ctx.GetArg<string>("CreateOrDeleteOrGet");
+            var tagName = createOrDeleteOrGet == "create" ? ctx.GetArg<string>("TagName") : $"{ctx.GetArg<string>("TagName")} {tagContent}".Trim();
             switch (createOrDeleteOrGet)
             {
                 case "get":
@@ -131,7 +131,7 @@ namespace CommandsTest.Commands.Misc
                         var pagesStringArrayListIHaveNoIdea = _globalTags.Select(x => x.Name).ToList();
                         pagesStringArrayListIHaveNoIdea.AddRange(_allTags.Where(x => x.GuildId == ctx.Guild.Id).Select(x => x.Name)); 
                         var pagesData = pagesStringArrayListIHaveNoIdea.Partition(Math.Max(pagesStringArrayListIHaveNoIdea.Count / 2, 1)).Where(x => x.Count != 0).ToList().SelectMany(x => x).Distinct();
-                        var pages = pagesData.Select(tag => new Page {Content = string.Join('\n', $"Global tag `{tag}`")}).ToList();
+                        var pages = pagesData.Select(tag => new Page {Content = string.Join('\n', $"{(_allTags.Any(x => x.Name == tag) ? "Guild" : "Global")} tag `{tag}`")}).ToList();
                         var paginatedMessage = new PaginatedMessage(pages, ctx.Extension.Dispatcher, ctx.Author, false);
                         await ctx.ReplyAsync(paginatedMessage);
                         return;
@@ -146,7 +146,7 @@ namespace CommandsTest.Commands.Misc
                         break;
                     }
                     var type = _tagsModule.First(x => method!.DeclaringType == x.GetType());
-                    var tagResult = (string)method?.Invoke(type, new object[] {ctx});
+                    var tagResult = (string)method.Invoke(type, new object[] {ctx});
                     await ctx.ReplyAsync(tagResult);
                     break;
                 case "create":

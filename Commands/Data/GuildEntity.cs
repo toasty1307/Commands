@@ -6,7 +6,7 @@ namespace Commands.Data
     public class GuildEntity
     {
         [Key]
-        public ulong Id { get; set; }
+        public ulong GuildId { get; set; }
         
         public string Prefix { get; set; }
         
@@ -20,13 +20,13 @@ namespace Commands.Data
 
         private bool Equals(GuildEntity other)
         {
-            return Id == other.Id && Prefix == other.Prefix && Equals(Commands, other.Commands) && Equals(Groups, other.Groups);
+            return GuildId == other.GuildId && Prefix == other.Prefix && Equals(Commands, other.Commands) && Equals(Groups, other.Groups);
         }
 
         public override int GetHashCode()
         {
             // ReSharper disable once NonReadonlyMemberInGetHashCode
-            return Id.GetHashCode();
+            return GuildId.GetHashCode();
         }
         
         public static bool operator ==(GuildEntity obj1, GuildEntity obj2) => obj1?.Equals(obj2) ?? false;

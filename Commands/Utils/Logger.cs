@@ -37,6 +37,13 @@ namespace Commands.Utils
             var method = frame.GetMethod();
             var fullName = method!.DeclaringType!.FullName;
             var source = fullName!.Contains('+') ? fullName![fullName.LastIndexOf(".", StringComparison.Ordinal)..fullName.IndexOf("+", StringComparison.Ordinal)] : method.DeclaringType.Name;
+            if (source.Replace(".", "") == "LoggerExtensions")
+            {
+                frame = stackTrace.GetFrames()[6];
+                method = frame.GetMethod();
+                fullName = method!.DeclaringType!.FullName;
+                source = fullName!.Contains('+') ? fullName![fullName.LastIndexOf(".", StringComparison.Ordinal)..fullName.IndexOf("+", StringComparison.Ordinal)] : method.DeclaringType.Name; 
+            }
             var methodName = method.Name == "MoveNext" ? method.DeclaringType.Name[2..^1] : method.Name;
             methodName = methodName == ".ctor" ? fullName + "_ctor" : methodName;
             methodName = methodName.Contains('>') ? "(some local method somewhere idk)" : methodName; 

@@ -1,22 +1,40 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace CommandsTest.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class InitalCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Guilds",
+                name: "Afk",
                 columns: table => new
                 {
-                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false)
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    AfkSetTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Message = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Guilds", x => x.Id);
+                    table.PrimaryKey("PK_Afk", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Guilds",
+                columns: table => new
+                {
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Prefix = table.Column<string>(type: "text", nullable: true),
+                    Commands = table.Column<string>(type: "text", nullable: true),
+                    Groups = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Guilds", x => x.GuildId);
                 });
 
             migrationBuilder.CreateTable(
@@ -33,7 +51,28 @@ namespace CommandsTest.Migrations
                         name: "FK_Blacklist_Guilds_GuildId",
                         column: x => x.GuildId,
                         principalTable: "Guilds",
-                        principalColumn: "Id",
+                        principalColumn: "GuildId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tags",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ThePersonWhoMadeThisTagUserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: true),
+                    Name = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tags", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tags_Guilds_GuildId",
+                        column: x => x.GuildId,
+                        principalTable: "Guilds",
+                        principalColumn: "GuildId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -41,12 +80,13 @@ namespace CommandsTest.Migrations
                 name: "CommandEntity",
                 columns: table => new
                 {
-                    Name = table.Column<string>(type: "text", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: true),
                     BlacklistEntityId = table.Column<decimal>(type: "numeric(20,0)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CommandEntity", x => x.Name);
+                    table.PrimaryKey("PK_CommandEntity", x => x.Id);
                     table.ForeignKey(
                         name: "FK_CommandEntity_Blacklist_BlacklistEntityId",
                         column: x => x.BlacklistEntityId,
@@ -58,12 +98,13 @@ namespace CommandsTest.Migrations
                 name: "GroupEntity",
                 columns: table => new
                 {
-                    Name = table.Column<string>(type: "text", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: true),
                     BlacklistEntityId = table.Column<decimal>(type: "numeric(20,0)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GroupEntity", x => x.Name);
+                    table.PrimaryKey("PK_GroupEntity", x => x.Id);
                     table.ForeignKey(
                         name: "FK_GroupEntity_Blacklist_BlacklistEntityId",
                         column: x => x.BlacklistEntityId,
@@ -85,15 +126,26 @@ namespace CommandsTest.Migrations
                 name: "IX_GroupEntity_BlacklistEntityId",
                 table: "GroupEntity",
                 column: "BlacklistEntityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tags_GuildId",
+                table: "Tags",
+                column: "GuildId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Afk");
+
+            migrationBuilder.DropTable(
                 name: "CommandEntity");
 
             migrationBuilder.DropTable(
                 name: "GroupEntity");
+
+            migrationBuilder.DropTable(
+                name: "Tags");
 
             migrationBuilder.DropTable(
                 name: "Blacklist");

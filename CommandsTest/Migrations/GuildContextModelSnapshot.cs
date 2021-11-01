@@ -95,14 +95,20 @@ namespace CommandsTest.Migrations
 
             modelBuilder.Entity("CommandsTest.Data.GuildEntity", b =>
                 {
-                    b.Property<decimal>("Id")
+                    b.Property<decimal>("GuildId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<decimal>("GuildId")
-                        .HasColumnType("numeric(20,0)");
+                    b.Property<string>("Commands")
+                        .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Groups")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Prefix")
+                        .HasColumnType("text");
+
+                    b.HasKey("GuildId");
 
                     b.ToTable("Guilds");
                 });

@@ -19,7 +19,7 @@ namespace Commands
         public List<ulong> OwnerIds { get; }
         public CommandDispatcher Dispatcher { get; private set; }
         public CommandRegistry Registry { get; private set; }
-        public GuildContext Provider { get; private set; }
+        public ISettingProvider Provider { get; private set; }
 
         public event AsyncEventHandler<DiscordMessage> UnknownCommand; 
         public event AsyncEventHandler<DiscordInteraction> UnknownCommandInteraction; 
@@ -47,14 +47,14 @@ namespace Commands
             Client = client;
             Registry = new CommandRegistry(Client);
             Dispatcher = new CommandDispatcher(Client, Registry);
-            Provider = new GuildContext();
+            Provider = Options.Provider;
             Client.GuildDownloadCompleted += (_, _) => FetchOwners();
             Client.MessageCreated += Dispatcher.Handle;
             Client.InteractionCreated += Dispatcher.Handle;
             Client.ContextMenuInteractionCreated +=  Dispatcher.Handle;
             Client.ComponentInteractionCreated += Dispatcher.Handle;
             Client.MessageUpdated += Dispatcher.Handle;
-            Provider.DoCacheStuff();
+            Provider.Init();
         }
 
         public async Task FetchOwners()
@@ -78,7 +78,7 @@ namespace Commands
             CommandPrefixChange.SafeInvoke(channelGuild, prefix);
             var entity = Provider.Get(channelGuild);
             entity.Prefix = prefix;
-            Provider.Update(channelGuild, entity);
+            Provider.Set( entity);
         }
         public void CommandStatusChanged(DiscordGuild guild, Command command, bool enable)
         {
@@ -90,7 +90,7 @@ namespace Commands
                 Name = command.Name,
                 GuildId = guild.Id
             }, enable);
-            Provider.Update(guild, entity);
+            Provider.Set(entity);
         }
         public void UnknownCommandRun(DiscordMessage message)
         {
@@ -127,7 +127,7 @@ namespace Commands
                 Name = group.Name,
                 GuildId = guild.Id
             }, enabled);
-            Provider.Update(guild, entity);
+            Provider.Set(entity);
         }
         public void CommandCanceled(Command command, string invalidArgs, DiscordInteraction interaction)
         {

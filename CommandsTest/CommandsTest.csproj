@@ -10,7 +10,7 @@
       </None>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01008" />
+        <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01026" />
         <PackageReference Include="DSharpPlus.Lavalink" Version="4.2.0-nightly-01008" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0-rc.1.21452.10" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0-rc.1" />

@@ -207,14 +207,14 @@ namespace Commands.CommandsStuff
                 {
                     var guildSettings = Extension.Provider.Get(message.Channel.Guild);
                     guildSettings.Commands.Add(new DisabledCommandEntity{Name = Name, GuildId = message.Channel?.Guild?.Id ?? 0}, true);
-                    Extension.Provider.Update(message.Channel.Guild, guildSettings);
+                    Extension.Provider.Set(guildSettings);
                     Logger.LogWarning("Command was not in DB, added it");
                 }
                 if (Extension.Provider.Get(message.Channel.Guild).Groups.All(x => x.Key.Name != Group.Name))
                 {
                     var guildSettings = Extension.Provider.Get(message.Channel.Guild);
                     guildSettings.Groups.Add(new DisabledGroupEntity{Name = Group.Name, GuildId = message.Channel?.Guild?.Id ?? 0}, true);
-                    Extension.Provider.Update(message.Channel.Guild, guildSettings);
+                    Extension.Provider.Set(guildSettings);
                     Logger.LogWarning("Group was not in DB, added it");
                 }
                 return (true, null);

@@ -5,7 +5,8 @@ using Commands;
 using Commands.CommandsStuff;
 using Commands.Utils;
 using CommandsTest.Commands.Misc;
-using CommandsTest.Modules;
+using CommandsTest.Data;
+using CommandsTest.Extensions;
 using CommandsTest.Utils;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -18,68 +19,30 @@ namespace CommandsTest
 {
     public class CommandsTestBot
     {
-        private DiscordClient Client { get; }
-        private BlacklistModule BlacklistModule { get; }
-        private AfkModule AfkModule { get; }
+        private readonly DiscordShardedClient _client;
+        private readonly Config _config;
         
         public CommandsTestBot()
         {
-            var config = GetConfig("Config.json");
+            _config = GetConfig("Config.json");
             var discordConfiguration = new DiscordConfiguration
             {
-                Token = config.Token,
+                Token = _config.Token,
                 LoggerFactory = new LoggerFactory(),
                 Intents = DiscordIntents.All,
                 MinimumLogLevel = LogLevel.Trace
             };
-            var commandsConfig = new CommandsConfig
-            {
-                Prefix = config.Prefix,
-                Owners = new ulong[]{ 742976057761726514, 519673297693048832 },
-                Invite = "discord.gg/TCf7QexN5e"
-            };
-            Client = new DiscordClient(discordConfiguration);
-            AfkModule = Client.AddAfkModule();
-            Client.MessageCreated += AfkModule.OnMessage;
-            var commandsExtension = Client.UseCommands(new CommandsExtension(commandsConfig));
-            commandsExtension.Registry.RegisterDefaults();
-            commandsExtension.Registry.RegisterGroups(new Group[]
-            {
-                new()
-                {
-                    Name = "Misc",
-                    Description = "misc stuff, nothing much"
-                },
-                new()
-                {
-                    Name = "Admin",
-                    Description = "Owner only commands idk"
-                },
-                new()
-                {
-                    Name = "MusicStuff",
-                    Description = "the title says it all"
-                },
-                new()
-                {
-                    Name = "Moderation",
-                    Description = "for people who like milk"
-                }
-            });
-            commandsExtension.Registry.RegisterCommands(GetType().Assembly);
-            Client.GuildMemberAdded += (_, args) => CheckForBadNick(args.Member, args.Member.Nickname ?? args.Member.Username);
-            Client.GuildMemberUpdated += (_, args) => CheckForBadNick(args.Member, args.NicknameAfter);
-            Client.GuildDownloadCompleted += (client, _) =>
+            _client = new DiscordShardedClient(discordConfiguration);
+            _client.GuildMemberAdded += (_, args) => CheckForBadNick(args.Member, args.Member.Nickname ?? args.Member.Username);
+            _client.GuildMemberUpdated += (_, args) => CheckForBadNick(args.Member, args.NicknameAfter);
+            _client.GuildDownloadCompleted += (client, _) =>
             {
                 client.Logger.LogInformation($"Client ready, logged in as ({client.CurrentUser.Username}#{client.CurrentUser.Discriminator}), you can run your command now senpai");
                 return Task.CompletedTask;
             };
-            Client.UseLavalink();
-            Client.Logger.LogInformation("Initializing blacklist module");
-            BlacklistModule = Client.AddBlacklistModule();
-            Client.Logger.LogInformation("Initialized blacklist module");
-            commandsExtension.Dispatcher.AddInhibitor((DiscordMessage message, Command t2) => BlacklistModule.Check(message, t2));
-            commandsExtension.Dispatcher.AddInhibitor((DiscordInteraction interaction, Command t2) => BlacklistModule.Check(interaction, t2));
+            _client.UseLavalinkAsync().GetAwaiter().GetResult();
+            _client.Logger.LogInformation("Initializing blacklist module");
+            _client.Logger.LogInformation("Initialized blacklist module");
             Tag.RegisterTags(GetType().Assembly);
         }
 
@@ -93,16 +56,62 @@ namespace CommandsTest
             }
             catch (Exception e)
             {
-                Client.Logger.Error(e);
+                _client.Logger.Error(e);
             }
         }
 
         public async Task Run()
         {
-            await Client.ConnectAsync(new DiscordActivity{ActivityType = ActivityType.Playing, Name = "Milk"}, UserStatus.Idle, DateTimeOffset.Now);
+            await _client.StartAsync();
+            var commandsConfig = new CommandsConfig
+            {
+                Prefix = _config.Prefix,
+                Owners = new ulong[]{ 742976057761726514 },
+                Invite = "discord.gg/TCf7QexN5e",
+                Provider = new GuildContext()
+            };
+
+            foreach (var (_, client) in _client.ShardClients)
+            {
+                var bl = client.AddBlacklistModule();
+                var afk = client.AddAfkModule();
+                client.MessageCreated += afk.OnMessage;
+                client.AddExtension(new Nqn());
+                var commandsExtension = client.UseCommands(new CommandsExtension(commandsConfig));
+                commandsExtension.Registry.RegisterDefaults();
+                commandsExtension.Registry.RegisterGroups(new Group[]
+                {
+                    new()
+                    {
+                        Name = "Misc",
+                        Description = "misc stuff, nothing much"
+                    },
+                    new()
+                    {
+                        Name = "Admin",
+                        Description = "Owner only commands idk"
+                    },
+                    new()
+                    {
+                        Name = "MusicStuff",
+                        Description = "the title says it all"
+                    },
+                    new()
+                    {
+                        Name = "Moderation",
+                        Description = "for people who like milk"
+                    }
+                });
+                commandsExtension.Registry.RegisterCommands(GetType().Assembly);
+                commandsExtension.Dispatcher.AddInhibitor((DiscordMessage message, Command t2) => bl.Check(message, t2));
+                commandsExtension.Dispatcher.AddInhibitor((DiscordInteraction interaction, Command t2) => bl.Check(interaction, t2));
+            }
+
+            await _client.UpdateStatusAsync(new DiscordActivity("nothing", ActivityType.Playing), UserStatus.Idle,
+                    DateTimeOffset.Now);
         }
 
-        public Config GetConfig(string fileName)
+        private Config GetConfig(string fileName)
         {
             var directory = Directory.GetCurrentDirectory();
             var fullPath = Path.Combine(directory, fileName);

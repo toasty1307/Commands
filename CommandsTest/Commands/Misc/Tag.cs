@@ -11,6 +11,7 @@ using CommandsTest.Modules;
 using DSharpPlus;
 using Microsoft.Extensions.Logging;
 using GuildContext = CommandsTest.Data.GuildContext;
+using GuildEntity = Commands.Data.GuildEntity;
 
 namespace CommandsTest.Commands.Misc
 {
@@ -100,7 +101,7 @@ namespace CommandsTest.Commands.Misc
                     };
                     _allTags.Add(newTag);
                     _guildContext.Tags.Add(newTag);
-                    _guildContext.Guilds.First(x => x.Id == ctx.Guild.Id).Tags.Add(newTag);
+                    _guildContext.Guilds.First(x => ((GuildEntity) x).GuildId == ctx.Guild.Id).Tags.Add(newTag);
                     await _guildContext.SaveChangesAsync();
                     await ctx.ReplyAsync($"Created new Tag `{tagName}`");
                     break;
@@ -161,7 +162,7 @@ namespace CommandsTest.Commands.Misc
                     };
                     _allTags.Add(newTag);
                     _guildContext.Tags.Add(newTag);
-                    _guildContext.Guilds.First(x => x.Id == ctx.Guild.Id).Tags.Add(newTag);
+                    _guildContext.Guilds.First(x => ((GuildEntity) x).GuildId == ctx.Guild.Id).Tags.Add(newTag);
                     await _guildContext.SaveChangesAsync();
                     await ctx.ReplyAsync($"Created new Tag `{tagName}`");
                     break;

@@ -71,7 +71,7 @@ namespace Commands
             var settings = Extension.Provider.Get(guild);
             if (settings is null)
             {
-                Extension.Provider.Update(guild, new GuildEntity
+                Extension.Provider.Set(new GuildEntity
                 {
                     Prefix = Extension.CommandPrefix,
                     Commands = new Dictionary<DisabledCommandEntity, bool>(Extension.Registry.Commands.
@@ -82,7 +82,7 @@ namespace Commands
                         Select(x => 
                             new KeyValuePair<DisabledGroupEntity, bool>(
                                 new DisabledGroupEntity{Name = x.Name, GuildId = guild.Id}, true))),
-                    Id = guild?.Id ?? 0
+                    GuildId = guild?.Id ?? 0
                 });
             }
         }

@@ -18,7 +18,7 @@ namespace CommandsTest.Modules
         {
             var guildEntity = Cache.FirstOrDefault(x => x.GuildId == guild.Id);
             var blacklist = guildEntity?.Blacklist.FirstOrDefault(x => x.Id == user.Id);
-            if (blacklist is null || !blacklist.Commands.Any() || !blacklist.Groups.Any()) return true;
+            if (blacklist is null || !blacklist.Commands.Any() && !blacklist.Groups.Any()) return true;
             var commandEntity = blacklist.Commands.FirstOrDefault(x => x.Name == command.Name);
             if (commandEntity is not default(CommandEntity)) return false;
             var group = blacklist.Groups.FirstOrDefault(x => x.Name == command.Group.Name);
@@ -126,12 +126,12 @@ namespace CommandsTest.Modules
             using var context = new GuildContext();
             var blacklist = context.Blacklist.Include(x => x.Commands).Include(x => x.Groups).Include(x => x.GuildEntity).First(x => x.Id == user.Id);
             blacklist.Commands.Remove(blacklist.Commands.First(x => x.Name == command.Name));
-            context.Guilds.First(x => x.Id == guild.Id).Blacklist.First(x => x.Id == user.Id).Commands = blacklist.Commands;
+            context.Guilds.First(x => x.GuildId == guild.Id).Blacklist.First(x => x.Id == user.Id).Commands = blacklist.Commands;
             context.SaveChanges();
             context.Dispose();
-            var temp = Cache.First(x => x.Id == guild.Id).Blacklist.First(x => x.Id == user.Id);
+            var temp = Cache.First(x => x.GuildId == guild.Id).Blacklist.First(x => x.Id == user.Id);
             temp.Commands.Remove(temp.Commands.First(x => x.Name == command.Name));
-            Cache.First(x => x.Id == guild.Id).Blacklist.First(x => x.Id == user.Id).Commands = temp.Commands;
+            Cache.First(x => x.GuildId == guild.Id).Blacklist.First(x => x.Id == user.Id).Commands = temp.Commands;
             return WhitelistResult.Removed;
         }
         
@@ -142,12 +142,12 @@ namespace CommandsTest.Modules
             using var context = new GuildContext();
             var blacklist = context.Blacklist.Include(x => x.Commands).Include(x => x.Groups).Include(x => x.GuildEntity).First(x => x.Id == user.Id);
             blacklist.Groups.Remove(blacklist.Groups.First(x => x.Name == group.Name));
-            context.Guilds.First(x => x.Id == guild.Id).Blacklist.First(x => x.Id == user.Id).Groups = blacklist.Groups;
+            context.Guilds.First(x => x.GuildId == guild.Id).Blacklist.First(x => x.Id == user.Id).Groups = blacklist.Groups;
             context.SaveChanges();
             context.Dispose();
-            var temp = Cache.First(x => x.Id == guild.Id).Blacklist.First(x => x.Id == user.Id);
+            var temp = Cache.First(x => x.GuildId == guild.Id).Blacklist.First(x => x.Id == user.Id);
             temp.Groups.Remove(temp.Groups.First(x => x.Name == group.Name));
-            Cache.First(x => x.Id == guild.Id).Blacklist.First(x => x.Id == user.Id).Groups = temp.Groups;
+            Cache.First(x => x.GuildId == guild.Id).Blacklist.First(x => x.Id == user.Id).Groups = temp.Groups;
             return WhitelistResult.Removed;
         }
 
@@ -186,7 +186,8 @@ namespace CommandsTest.Modules
             {
                 Blacklist = blacklist.Where(blacklistEntity => blacklistEntity.GuildId == x.GuildId).ToList(),
             }).ToList();
-            Cache.ForEach(x => x.GuildId = x.Blacklist.First().GuildId);
+            if (Cache.Any() && Cache.First().Blacklist.Any())
+                Cache.ForEach(x => x.GuildId = x.Blacklist.First().GuildId);
         }
     }
 

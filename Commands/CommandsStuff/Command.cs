@@ -184,7 +184,7 @@ namespace Commands.CommandsStuff
             return (true, null);
         }
 
-        public Throttle GetThrottle(DiscordUser user) => _throttling.ContainsKey(user.Id) ? _throttling[user.Id] : null;
+        public Throttle GetThrottle(DiscordUser user) => _throttling.TryGetValue(user.Id, out var throttle) ? throttle : null;
 
         public virtual async Task<(bool, string)> IsUsable(DiscordMessage message)
         {
@@ -227,9 +227,8 @@ namespace Commands.CommandsStuff
         public void Throttle(DiscordUser user)
         {
             if (ThrottlingOptions is null || Extension.Owners.Contains(user)) return;
-            var throttleExists = _throttling.ContainsKey(user.Id);
             Throttle throttle;
-            if (throttleExists)
+            if (_throttling.ContainsKey(user.Id))
                 throttle = _throttling[user.Id];
             else
                 throttle = new Throttle

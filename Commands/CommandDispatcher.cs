@@ -22,11 +22,11 @@ namespace Commands
         public CommandRegistry Registry { get; }
         public ArgumentParser ArgumentParser { get; }
         
-        public List<Inhibitor<DiscordMessage, Command>> MessageInhibitors { get; set; } = new();
+        public List<Inhibitor<DiscordMessage, Command>> MessageInhibitors { get; } = new();
         
-        public List<Inhibitor<DiscordInteraction, Command>> InteractionInhibitors { get; set; } = new();
+        public List<Inhibitor<DiscordInteraction, Command>> InteractionInhibitors { get; } = new();
         
-        public Dictionary<string, Action<ComponentInteractionCreateEventArgs>> ComponentActions { get; set; } = new();
+        public Dictionary<string, Action<ComponentInteractionCreateEventArgs>> ComponentActions { get; } = new();
         
         #endregion
 
@@ -216,8 +216,8 @@ namespace Commands
         public async Task Handle(DiscordClient _, ComponentInteractionCreateEventArgs interaction)
         {
             await interaction.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-            if (ComponentActions.ContainsKey(interaction.Id))
-                ComponentActions[interaction.Id].Invoke(interaction);
+            if (ComponentActions.TryGetValue(interaction.Id, out var action))
+                action.Invoke(interaction);
         }
 
         public async Task Handle(DiscordClient _, MessageUpdateEventArgs args)

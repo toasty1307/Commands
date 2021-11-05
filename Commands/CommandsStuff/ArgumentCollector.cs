@@ -4,12 +4,12 @@ namespace Commands.CommandsStuff
 {
     public class ArgumentCollector
     {
-        public Dictionary<string, object> Args { get; set; } = new();
+        public Dictionary<string, object> Args { get; } = new();
 
         public object this[string key]
         {
-            get => Args.ContainsKey(key) ? Args[key] : null;
-            set { if (Args.ContainsKey(key)) Args[key] = value; else Args.Add(key, value); }
+            get => Args.TryGetValue(key, out var arg) ? arg : null;
+            set { if (!Args.TryAdd(key, value)) Args[key] = value; }
         }
 
         public T Get<T>(string key) => this[key] is T t ? t : default;

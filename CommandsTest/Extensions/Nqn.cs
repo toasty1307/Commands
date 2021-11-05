@@ -16,9 +16,7 @@ namespace CommandsTest.Extensions
         protected override async void Setup(DiscordClient client)
         {
             foreach (var discordChannel in client.Guilds.Values.SelectMany(x => x.Channels.Values).Where(x => x.Type == ChannelType.Text))
-            {
                 _webhooks.Add(discordChannel.Id, (await discordChannel.GetWebhooksAsync()).FirstOrDefault(x => x.ChannelId == discordChannel.Id));
-            }
 
             client.MessageCreated += EmojiCheck;
         }

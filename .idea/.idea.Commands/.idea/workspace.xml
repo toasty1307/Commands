@@ -5,13 +5,10 @@
     <projectFile>MinifyProject/MinifyProject.csproj</projectFile>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="94bf8c1b-675b-4de2-ad6b-b1483e421044" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/dataSources.local.xml" afterDir="false" />
+    <list default="true" id="94bf8c1b-675b-4de2-ad6b-b1483e421044" name="Changes" comment="some smol stuff">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Commands/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandDispatcher.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandDispatcher.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandsStuff/ArgumentCollector.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandsStuff/ArgumentCollector.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/CommandsStuff/Command.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/CommandsStuff/Command.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommandsTest/Extensions/Nqn.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CommandsTest/Extensions/Nqn.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Commands/Commands.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Commands.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Commands/Types/DiscordUser.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/Types/DiscordUser.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,6 +29,7 @@
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/f7eeacda6af643e1945ca3eb3ef7bac415de00/83/a9ba6d55/DiscordJson.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/882d099e37914cbc904f9e4440edfb421fc778/65/DbContext.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/dev/Commands/Commands/CommandsStuff/ArgumentCollector.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2b4a9bf56bff4e5a833d8c1ea3806766a11870/FC/ThrowHelper.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2b4a9bf56bff4e5a833d8c1ea3806766a11870/268/ExceptionDispatchInfo.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/f7eeacda6af643e1945ca3eb3ef7bac415de00/e3/287b2df7/DiscordApiClient.cs" root0="SKIP_HIGHLIGHTING" />
@@ -40,6 +38,7 @@
     <setting file="file://$PROJECT_DIR$/MinifyProject/project.min.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/60e2219489a94b41b9719a10989e2aa3168178/154/SingleQueryingEnumerable.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/f7eeacda6af643e1945ca3eb3ef7bac415de00/f1/1bd5e63c/DiscordEmoji.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2b4a9bf56bff4e5a833d8c1ea3806766a11870/CF/Number.Parsing.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2b4a9bf56bff4e5a833d8c1ea3806766a11870/2F4/CastHelpers.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/f7eeacda6af643e1945ca3eb3ef7bac415de00/62/6a91818f/RestClient.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/882d099e37914cbc904f9e4440edfb421fc778/37C/Check.cs" root0="SKIP_HIGHLIGHTING" />
@@ -118,7 +117,7 @@
       <workItem from="1635431021459" duration="400000" />
       <workItem from="1636110425346" duration="46000" />
       <workItem from="1636110513485" duration="61000" />
-      <workItem from="1636110647377" duration="384000" />
+      <workItem from="1636110647377" duration="1858000" />
     </task>
     <task id="LOCAL-00001" summary="drinking milk">
       <created>1633847249827</created>
@@ -148,7 +147,14 @@
       <option name="project" value="LOCAL" />
       <updated>1633966348478</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="some smol stuff">
+      <created>1636111226333</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1636111226333</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -175,13 +181,7 @@
     <MESSAGE value="afk" />
     <MESSAGE value="stuff" />
     <MESSAGE value="more stuff" />
-    <option name="LAST_COMMIT_MESSAGE" value="more stuff" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <default-breakpoints>
-        <breakpoint enabled="true" type="DotNet Exception Breakpoints" />
-      </default-breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="some smol stuff" />
+    <option name="LAST_COMMIT_MESSAGE" value="some smol stuff" />
   </component>
 </project>

@@ -9,12 +9,12 @@ namespace Commands.Types
     [ArgumentType]
     public class DiscordUserArgumentType : ArgumentType<DiscordUser>
     {
-        public Regex UserRegex = new(@"\d+");
+        private readonly Regex _userRegex = new(@"\d+");
         public override bool Validate(string argString)
         {
             try
             {
-                var match = UserRegex.Match(argString);
+                var match = _userRegex.Match(argString);
                 try
                 {
                     _ = Client.Guilds.Values.SelectMany(x => x.Members.Values)
@@ -36,7 +36,7 @@ namespace Commands.Types
         {
             var guilds = Client.Guilds.Values;
             var channels = guilds.SelectMany(x => x.Members.Values);
-            var givenIdString = UserRegex.Match(argString).Value;
+            var givenIdString = _userRegex.Match(argString).Value;
             var givenId = Convert.ToUInt64(givenIdString);
             try
             {
